@@ -16,5 +16,8 @@ Now you can run the following command to start the simualtion:
 ### Modified IBM files
 The following files have been modified and adapted from IBM Hyperledger Fabric repository files.
 
+- `app.js` which contains the application code that creates users and executes transactions among other things.
+- `token_contract.go` which contains the chaincode for the usage of tokens.
+
 ## License
 This project is available under the MIT License, located in the [LICENSE](LICENSE.md) file.
