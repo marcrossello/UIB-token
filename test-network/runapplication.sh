@@ -13,12 +13,12 @@ printf "${CYAN}Deploying chaincode${NC}\n"
 printf "${CYAN}------------------------------------------------------------------------------------${NC}\n"
 printf "${CYAN}Executing aplication${NC}\n"
 printf "${CYAN}------------------------------------------------------------------------------------${NC}\n"
-node ~/tfg/fabric/UIB-token/token-erc-20/application-javascript/app.js
+node ../token-erc-20/application-javascript/app.js
 
 printf "${CYAN}Bringing network down${NC}\n"
 ./network.sh down
 
 printf "${CYAN}Deleting wallet file${NC}\n"
-rm -r ~/tfg/fabric/UIB-token/token-erc-20/application-javascript/wallet
+rm -r ../token-erc-20/application-javascript/wallet
 
 printf "${CYAN}Simulation completed${NC}\n"
