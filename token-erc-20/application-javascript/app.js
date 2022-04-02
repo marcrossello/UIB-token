@@ -1,7 +1,5 @@
 /*
- * Copyright IBM Corp. All Rights Reserved.
- *
- * SPDX-License-Identifier: Apache-2.0
+ * This is an IBM Corp file that has been modified by Marc Rossello
  */
 
 'use strict';
@@ -67,32 +65,52 @@ async function main() {
 			// Get the contract from the network.
 			const contract = network.getContract(chaincodeName);
 
-			let result
+			let result;
 
 			console.log('\n--> Evaluate Transaction: ClientAccountID');
 			result = await contract.evaluateTransaction('ClientAccountID');
-			console.log('yay');
-			console.log(`*** Result: ${result}`);
-		
+			console.log(`*** Client account ID: ${result}`);
+
+
 
 			// Now let's try to submit a transaction.
 			// This will be sent to both peers and if both peers endorse the transaction, the endorsed proposal will be sent
 			// to the orderer to be committed by each of the peer's to the channel ledger.
 			console.log('\n--> Submit Transaction: Mint');
 			result = await contract.submitTransaction('Mint', '5000');
-			console.log(`*** Result: ${result}`);
-			
+			console.log(`*** 5000 tokens minted`);
+
+			var recipient = "eDUwOTo6Q049YXBwVXNlcjIsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDE6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
+			console.log('\n--> Submit Transaction: Transfer');
+			result = await contract.submitTransaction('Transfer', recipient, '3000');
+			console.log(`*** transferred 3000 tokens to user 2`);
+
 
 			console.log('\n--> Evaluate Transaction: ClientAccountBalance');
 			result = await contract.evaluateTransaction('ClientAccountBalance');
-			console.log(`*** Result: ${result}`);
+			console.log(`*** Client account balance: ${result}`);
 
-			console.log('\n--> Evaluate Transaction: ClientAccountID');
-			result = await contract.evaluateTransaction('ClientAccountID');
-			console.log('yay2');
-			console.log(`*** Result: ${result}`);
-			console.log('yay3');
-			
+
+			//Burn 1000 tokens
+			console.log('\n--> Submit Transaction: Burn');
+			result = await contract.submitTransaction('Burn', '1000');
+			console.log(`*** 1000 tokens burned`);
+
+
+			console.log('\n--> Evaluate Transaction: ClientAccountBalance');
+			result = await contract.evaluateTransaction('ClientAccountBalance');
+			console.log(`*** Client account balance: ${result}`);
+
+			try {
+				//Try to transfer 10000 tokens (not enough in wallet)
+				var recipient = "eDUwOTo6Q049YXBwVXNlcjIsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDE6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
+				console.log('\n--> Submit Transaction: Transfer');
+				result = await contract.submitTransaction('Transfer', recipient, '10000');
+				console.log(`*** Tried to execute transaction of 10000 tokens`);
+			} catch (error) {
+				console.log(`*** Successfully caught the error: \n    ${error}`);
+			}
+
 
 
 			// try {
@@ -105,12 +123,69 @@ async function main() {
 			// 	console.log(`*** Successfully caught the error: \n    ${error}`);
 			// }
 
-			
+
 		} finally {
 			// Disconnect from the gateway when the application is closing
 			// This will close all connections to the network
 			gateway.disconnect();
 		}
+
+		console.log("\n------------------------------ User 2 ------------------------------")
+		try {
+			// setup the gateway instance
+			// The user will now be able to create connections to the fabric network and be able to
+			// submit transactions and query. All transactions submitted by this gateway will be
+			// signed by this user using the credentials stored in the wallet.
+			await gateway.connect(ccp, {
+				wallet,
+				identity: org1User2Id,
+				discovery: { enabled: true, asLocalhost: true } // using asLocalhost as this gateway is using a fabric network deployed locally
+			});
+
+			// Build a network instance based on the channel where the smart contract is deployed
+			const network = await gateway.getNetwork(channelName);
+
+			// Get the contract from the network.
+			const contract = network.getContract(chaincodeName);
+
+			let result;
+
+			console.log('\n--> Evaluate Transaction: ClientAccountID');
+			result = await contract.evaluateTransaction('ClientAccountID');
+			console.log(`*** Client account ID: ${result}`);
+
+			console.log('\n--> Evaluate Transaction: ClientAccountBalance');
+			result = await contract.evaluateTransaction('ClientAccountBalance');
+			console.log(`*** Client account balance: ${result}`);
+
+
+			// Now let's try to submit a transaction.
+			// This will be sent to both peers and if both peers endorse the transaction, the endorsed proposal will be sent
+			// to the orderer to be committed by each of the peer's to the channel ledger.
+			console.log('\n--> Submit Transaction: Mint');
+			result = await contract.submitTransaction('Mint', '7000');
+			console.log(`*** 7000 tokens minted`);
+
+
+			console.log('\n--> Evaluate Transaction: ClientAccountBalance');
+			result = await contract.evaluateTransaction('ClientAccountBalance');
+			console.log(`*** Client account balance: ${result}`);
+
+			console.log('\n--> Evaluate Transaction: ClientAccountID');
+			result = await contract.evaluateTransaction('ClientAccountID');
+			console.log(`*** Result: ${result}`);
+
+
+		} finally {
+			// Disconnect from the gateway when the application is closing
+			// This will close all connections to the network
+			gateway.disconnect();
+		}
+
+		console.log("--------------------------------------------------------------------------------");
+		console.log("SIMULATION FINISHED SUCCESSFULLY")
+		console.log("--------------------------------------------------------------------------------");
+
 	} catch (error) {
 		console.error(`******** FAILED to run the application: ${error}`);
 	}
