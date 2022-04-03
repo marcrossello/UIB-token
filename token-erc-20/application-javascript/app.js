@@ -43,7 +43,7 @@ async function main() {
 		// and would be part of an administrative flow
 		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1UserId, 'org1.department1');
 
-		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1User2Id, 'org1.department1');
+		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1User2Id, 'org1.department2');
 
 		// Create a new gateway instance for interacting with the fabric network.
 		// In a real application this would be done as the backend server session is setup for
@@ -77,7 +77,7 @@ async function main() {
 			console.log('\n--> Getting client account ID');
 			result = await contract.evaluateTransaction('ClientAccountID');
 			console.log(`*** Client account ID: ${result}`);
-
+			console.log(Buffer.from(result.toString(), 'base64').toString('ascii'));
 
 
 			// Now let's try to submit a transaction.
@@ -87,7 +87,7 @@ async function main() {
 			result = await contract.submitTransaction('Mint', '5000');
 			console.log(`*** Completed`);
 
-			var recipient = "eDUwOTo6Q049YXBwVXNlcjIsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDE6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
+			var recipient = "eDUwOTo6Q049YXBwVXNlcjIsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
 			result = await contract.submitTransaction('Transfer', recipient, '3000');
 			console.log(`*** transferred 3000 tokens to user 2`);
 
@@ -157,6 +157,7 @@ async function main() {
 			console.log('\n--> Getting client account ID');
 			result = await contract.evaluateTransaction('ClientAccountID');
 			console.log(`*** Client account ID: ${result}`);
+			console.log(Buffer.from(result.toString(), 'base64').toString('ascii'));
 
 			console.log('\n--> Getting client account balance');
 			result = await contract.evaluateTransaction('ClientAccountBalance');

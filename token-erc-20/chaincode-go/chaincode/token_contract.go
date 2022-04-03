@@ -34,6 +34,7 @@ func (s *SmartContract) Mint(ctx contractapi.TransactionContextInterface, amount
 
 	// Check minter authorization - this sample assumes Org1 is the central banker with privilege to mint new tokens
 	clientMSPID, err := ctx.GetClientIdentity().GetMSPID()
+	//Esta comprobación tiene que servir para determinar si el usuario es administración de la UIB o un estudiante
 	if err != nil {
 		return fmt.Errorf("failed to get MSPID: %v", err)
 	}
@@ -294,7 +295,6 @@ func (s *SmartContract) TotalSupply(ctx contractapi.TransactionContextInterface)
 	return totalSupply, nil
 }
 
-
 // Helper Functions
 
 // transferHelper is a helper function that transfers tokens from the "from" address to the "to" address
@@ -350,4 +350,32 @@ func transferHelper(ctx contractapi.TransactionContextInterface, from string, to
 	log.Printf("recipient %s balance updated from %d to %d", to, toCurrentBalance, toUpdatedBalance)
 
 	return nil
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------
+//*********************************************************************************************************************************************
+//---------------------------------------------------------------------------------------------------------------------------------------------
+// THIS PART SHOULD BE DELETED
+
+// transferHelper is a helper function that transfers tokens from the "from" address to the "to" address
+// Dependant functions include Transfer and TransferFrom
+func (s *SmartContract) debug(ctx contractapi.TransactionContextInterface) (int, error) {
+
+	// Get ID of submitting client identity
+	clientID, err := ctx.GetClientIdentity().GetID()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get client id: %v", err)
+	}
+
+	balanceBytes, err := ctx.GetStub().GetState(clientID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to read from world state: %v", err)
+	}
+	if balanceBytes == nil {
+		return 0, fmt.Errorf("the account %s does not exist", clientID)
+	}
+
+	balance, _ := strconv.Atoi(string(balanceBytes)) // Error handling not needed since Itoa() was used when setting the account balance, guaranteeing it was an integer.
+
+	return balance, nil
 }
