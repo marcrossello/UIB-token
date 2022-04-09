@@ -42,6 +42,39 @@ func (s *SmartContract) Mint(ctx contractapi.TransactionContextInterface, amount
 		return fmt.Errorf("client is not authorized to mint new tokens")
 	}
 
+	//-----------------------------------------------------------
+
+	//Check minter affiliation
+
+	//Get client certificate
+	ident, err := ctx.GetClientIdentity().GetX509Certificate()
+	if err != nil {
+		return fmt.Errorf("failed to get client id: %v", err)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+	//Print client attributes on the terminal (as an error)
+	/* return fmt.Errorf("\nClient Name: %v, \nClient Organization: %v, \nClient Department: %v, \nClient OrganizationalUnit: %v",
+	ident.Subject.CommonName, ident.Subject.Names[0], ident.Subject.Names[2], ident.Subject.OrganizationalUnit[2]) */
+
+	/* return fmt.Errorf("\nClient Name: %v, \nClient Organization: %v, \nClient Department: %v, \nClient OrganizationalUnit department: %v",
+	ident.Subject.CommonName, ident.Subject.Names[0].Value, ident.Subject.Names[2].Value, ident.Subject.OrganizationalUnit[2]) */
+	//Examples of values
+	//Subject.CommonName: appUser
+	//Subject.Names: [{2.5.4.11 org1} {2.5.4.11 client} {2.5.4.11 department1} {2.5.4.3 appUser}]
+	//Subject.OrganizationalUnit: [org1 client department1]
+
+	//Check that minter is from the minters department
+	var mintDepart interface{} = "department1"
+	if ident.Subject.Names[2].Value == mintDepart {
+		return fmt.Errorf("It is a minter----------------------------")
+	}
+
+	//PENDIENTE DE CONTINUAR
+
+	//-----------------------------------------------------------
+
 	// Get ID of submitting client identity
 	minter, err := ctx.GetClientIdentity().GetID()
 	if err != nil {
@@ -355,27 +388,30 @@ func transferHelper(ctx contractapi.TransactionContextInterface, from string, to
 //---------------------------------------------------------------------------------------------------------------------------------------------
 //*********************************************************************************************************************************************
 //---------------------------------------------------------------------------------------------------------------------------------------------
-// THIS PART SHOULD BE DELETED
+// THIS PART SHOULD BE DELETED AFTER DEVELOPMENT
 
 // transferHelper is a helper function that transfers tokens from the "from" address to the "to" address
 // Dependant functions include Transfer and TransferFrom
-func (s *SmartContract) debug(ctx contractapi.TransactionContextInterface) (int, error) {
+func isTheRightUser(ctx contractapi.TransactionContextInterface) (string, error) {
+
+	// Check minter authorization - this sample assumes Org1 is the central banker with privilege to mint new tokens
+	clientMSPID, err := ctx.GetClientIdentity().GetMSPID()
+	//Esta comprobación tiene que servir para determinar si el usuario es administración de la UIB o un estudiante
+	if err != nil {
+		return "", fmt.Errorf("failed to get MSPID: %v", err)
+	}
+	if clientMSPID != "Org1MSP" {
+		return "", fmt.Errorf("client is not authorized to mint new tokens")
+	}
 
 	// Get ID of submitting client identity
-	clientID, err := ctx.GetClientIdentity().GetID()
+	attributeValue, found, err := ctx.GetClientIdentity().GetAttributeValue("affiliation")
 	if err != nil {
-		return 0, fmt.Errorf("failed to get client id: %v", err)
+		return "", fmt.Errorf("failed to get client id: %v", err)
+	}
+	if found != true {
+		return "", fmt.Errorf("Attribute not found: %v", err)
 	}
 
-	balanceBytes, err := ctx.GetStub().GetState(clientID)
-	if err != nil {
-		return 0, fmt.Errorf("failed to read from world state: %v", err)
-	}
-	if balanceBytes == nil {
-		return 0, fmt.Errorf("the account %s does not exist", clientID)
-	}
-
-	balance, _ := strconv.Atoi(string(balanceBytes)) // Error handling not needed since Itoa() was used when setting the account balance, guaranteeing it was an integer.
-
-	return balance, nil
+	return attributeValue, nil
 }

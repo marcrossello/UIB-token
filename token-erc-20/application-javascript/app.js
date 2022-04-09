@@ -176,6 +176,29 @@ async function main() {
 			console.log(`*** Client account balance: ${result}`);
 
 
+
+			console.log('\n--> Getting global token balance');
+			result = await contract.evaluateTransaction('TotalSupply');
+			console.log(`*** Global token balance: ${result}`);
+
+
+			console.log("\n--------------------------------------------------------------------------------");
+			console.log("DEBUGGING SECTION")
+			console.log("--------------------------------------------------------------------------------");
+
+
+
+			try {
+				console.log('\n--> Checking if the user has autorization');
+				result = await contract.evaluateTransaction('isTheRightUser');
+				console.log(`*** Check result: ${result}`);
+			} catch (error) {
+				console.log(`*** Successfully caught the error: \n    ${error}`);
+			}
+
+
+
+
 		} finally {
 			// Disconnect from the gateway when the application is closing
 			// This will close all connections to the network
