@@ -67,11 +67,9 @@ func (s *SmartContract) Mint(ctx contractapi.TransactionContextInterface, amount
 
 	//Check that minter is from the minters department
 	var mintDepart interface{} = "department1"
-	if ident.Subject.Names[2].Value == mintDepart {
-		return fmt.Errorf("It is a minter----------------------------")
+	if ident.Subject.Names[2].Value != mintDepart {
+		return fmt.Errorf("This user has no mint permissions")
 	}
-
-	//PENDIENTE DE CONTINUAR
 
 	//-----------------------------------------------------------
 
@@ -156,6 +154,27 @@ func (s *SmartContract) Burn(ctx contractapi.TransactionContextInterface, amount
 	if clientMSPID != "Org1MSP" {
 		return fmt.Errorf("client is not authorized to mint new tokens")
 	}
+
+	//-----------------------------------------------------------
+
+	//Check burner affiliation
+
+	//Get client certificate
+	ident, err := ctx.GetClientIdentity().GetX509Certificate()
+	if err != nil {
+		return fmt.Errorf("failed to get client id: %v", err)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//Check that burner is from the minters department
+	var mintDepart interface{} = "department1"
+	if ident.Subject.Names[2].Value != mintDepart {
+		return fmt.Errorf("This user has no burn permissions")
+	}
+
+	//-----------------------------------------------------------
 
 	// Get ID of submitting client identity
 	minter, err := ctx.GetClientIdentity().GetID()
