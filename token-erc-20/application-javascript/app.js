@@ -19,6 +19,9 @@ const walletPath = path.join(__dirname, 'wallet');
 const org1UserId = 'appUser';
 const org1User2Id = 'appUser2';
 
+const appUserAccount = "eDUwOTo6Q049YXBwVXNlcixPVT1vcmcxK09VPWNsaWVudCtPVT1kZXBhcnRtZW50MTo6Q049Y2Eub3JnMS5leGFtcGxlLmNvbSxPPW9yZzEuZXhhbXBsZS5jb20sTD1EdXJoYW0sU1Q9Tm9ydGggQ2Fyb2xpbmEsQz1VUw==";
+const appUser2Account = "eDUwOTo6Q049YXBwVXNlcjIsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
+
 function prettyJSONString(inputString) {
 	return JSON.stringify(JSON.parse(inputString), null, 2);
 }
@@ -74,6 +77,16 @@ async function main() {
 
 			let result;
 
+			//User info section
+			result = await contract.evaluateTransaction('ClientAccountID');
+			console.log("INFO\n");
+			console.log("UserID: " + org1User2Id);
+			console.log("AccountID: " + result);
+			console.log("--------------------------------------------------------------------");
+
+
+
+
 			console.log('\n--> Getting client account ID');
 			result = await contract.evaluateTransaction('ClientAccountID');
 			console.log(`*** Client account ID: ${result}`);
@@ -88,8 +101,20 @@ async function main() {
 			console.log(`*** Completed`);
 
 			var recipient = "eDUwOTo6Q049YXBwVXNlcjIsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
+			console.log('\n--> Transferring 3000 tokens to user 2');
 			result = await contract.submitTransaction('Transfer', recipient, '3000');
-			console.log(`*** transferred 3000 tokens to user 2`);
+			console.log(`*** Transferred 3000 tokens to user 2`);
+
+			console.log('\n--> Getting client account balance');
+			result = await contract.evaluateTransaction('ClientAccountBalance');
+			console.log(`*** Client account balance: ${result}`);
+
+			//make 100 transactions of 5 tokens resulting in 500 tokens for the recipient
+			console.log('\n--> Transferring 250 tokens to user 2 in 10-token payments');
+			for (var i = 0; i < 25; i++) {
+				await contract.submitTransaction('Transfer', recipient, '10');
+			}
+			console.log(`*** transferred 250 tokens to user 2`);
 
 			console.log('\n--> Getting client account balance');
 			result = await contract.evaluateTransaction('ClientAccountBalance');
@@ -135,6 +160,7 @@ async function main() {
 		console.log("\n--------------------------------------------------------------------");
 		console.log("User 2");
 		console.log("--------------------------------------------------------------------");
+
 		try {
 			// setup the gateway instance
 			// The user will now be able to create connections to the fabric network and be able to
@@ -154,6 +180,16 @@ async function main() {
 
 			let result;
 
+			//User info section
+			result = await contract.evaluateTransaction('ClientAccountID');
+			console.log("INFO\n");
+			console.log("UserID: " + org1User2Id);
+			console.log("AccountID: " + result);
+			console.log("--------------------------------------------------------------------");
+
+
+
+
 			console.log('\n--> Getting client account ID');
 			result = await contract.evaluateTransaction('ClientAccountID');
 			console.log(`*** Client account ID: ${result}`);
@@ -167,9 +203,14 @@ async function main() {
 			// Now let's try to submit a transaction.
 			// This will be sent to both peers and if both peers endorse the transaction, the endorsed proposal will be sent
 			// to the orderer to be committed by each of the peer's to the channel ledger.
-			console.log('\n--> Minting 7000 tokens');
-			result = await contract.submitTransaction('Mint', '7000');
-			console.log(`*** Completed`);
+			try {
+				console.log('\n--> Minting 7000 tokens');
+				result = await contract.submitTransaction('Mint', '7000');
+				console.log(`*** Completed`);
+			} catch (error) {
+				//console.log(`*** Successfully caught the error: \n    ${error}`);
+			}
+
 
 			console.log('\n--> Getting client account balance');
 			result = await contract.evaluateTransaction('ClientAccountBalance');
@@ -182,23 +223,6 @@ async function main() {
 			console.log(`*** Global token balance: ${result}`);
 
 
-			console.log("\n--------------------------------------------------------------------------------");
-			console.log("DEBUGGING SECTION")
-			console.log("--------------------------------------------------------------------------------");
-
-
-
-			try {
-				console.log('\n--> Checking if the user has autorization');
-				result = await contract.evaluateTransaction('isTheRightUser');
-				console.log(`*** Check result: ${result}`);
-			} catch (error) {
-				console.log(`*** Successfully caught the error: \n    ${error}`);
-			}
-
-
-
-
 		} finally {
 			// Disconnect from the gateway when the application is closing
 			// This will close all connections to the network
@@ -208,6 +232,8 @@ async function main() {
 		console.log("\n--------------------------------------------------------------------------------");
 		console.log("SIMULATION FINISHED SUCCESSFULLY")
 		console.log("--------------------------------------------------------------------------------");
+
+		console.log('\x1b[36m%s\x1b[0m', 'I am cyan');  //cyan
 
 	} catch (error) {
 		console.error(`******** FAILED to run the application: ${error}`);
