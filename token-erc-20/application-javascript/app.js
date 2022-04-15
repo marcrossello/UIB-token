@@ -225,7 +225,7 @@ async function getClientAccountID(clientIdentity) {
 			gateway.disconnect();
 		}
 	} catch (error) {
-		//console.error(`******** FAILED to run the application: ${error}`);
+		console.error(`${error}`);
 	}
 }
 

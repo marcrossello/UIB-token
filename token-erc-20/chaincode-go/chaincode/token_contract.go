@@ -57,9 +57,7 @@ func (s *SmartContract) Mint(ctx contractapi.TransactionContextInterface, amount
 	if err != nil {
 		return fmt.Errorf("failed to get client id: %v", err)
 	}
-	if err != nil {
-		log.Fatal(err)
-	}
+
 	//Print client attributes on the terminal (as an error)
 	/* return fmt.Errorf("\nClient Name: %v, \nClient Organization: %v, \nClient Department: %v, \nClient OrganizationalUnit: %v",
 	ident.Subject.CommonName, ident.Subject.Names[0], ident.Subject.Names[2], ident.Subject.OrganizationalUnit[2]) */
@@ -260,46 +258,60 @@ func (s *SmartContract) Transfer(ctx contractapi.TransactionContextInterface, re
 		return fmt.Errorf("failed to get client id: %v", err)
 	}
 
-	err = transferHelper(ctx, clientID, recipient, amount)
-	if err != nil {
-		return fmt.Errorf("failed to transfer: %v", err)
-	}
-
-	//-----------------------------------------------------------
-	// If the destinatary user is another student check lending balance
-
-	//-----------------------------------------------------------
-
-	//Check user and recipient affiliation
+	//--------------------------------------------------------
+	//THIS NEEDS TO BE UPDATED
+	// Put client certificate in world state
+	// Get ID of submitting client identity
 
 	//Get client certificate
-	/*  ident, err := ctx.GetClientIdentity().GetX509Certificate()
+	/* cert, err := ctx.GetClientIdentity().GetX509Certificate()
 	if err != nil {
 		return fmt.Errorf("failed to get client id: %v", err)
 	}
-	if err != nil {
-		log.Fatal(err)
-	}
-	//Print client attributes on the terminal (as an error)
-	// return fmt.Errorf("\nClient Name: %v, \nClient Organization: %v, \nClient Department: %v, \nClient OrganizationalUnit: %v",
-	//ident.Subject.CommonName, ident.Subject.Names[0], ident.Subject.Names[2], ident.Subject.OrganizationalUnit[2])
 
-	// return fmt.Errorf("\nClient Name: %v, \nClient Organization: %v, \nClient Department: %v, \nClient OrganizationalUnit department: %v",
-	//ident.Subject.CommonName, ident.Subject.Names[0].Value, ident.Subject.Names[2].Value, ident.Subject.OrganizationalUnit[2])
-	//Examples of values
-	//Subject.CommonName: appUser
-	//Subject.Names: [{2.5.4.11 org1} {2.5.4.11 client} {2.5.4.11 department1} {2.5.4.3 appUser}]
-	//Subject.OrganizationalUnit: [org1 client department1]
+	str := fmt.Sprintf("%v", cert.Subject.Names[2].Value)
+
+	var tipo int
+	if str == "department1" {
+		tipo = 5
+	} else {
+		tipo = 200
+	}
+
+	var key string
+	key = clientID + "type"
 
 	//Check that minter is from the minters department
-	var mintDepart interface{} = "department1"
-	if ident.Subject.Names[2].Value != mintDepart {
-		return fmt.Errorf("This user has no mint permissions")
-	}  */
+	err = ctx.GetStub().PutState(key, []byte(strconv.Itoa(tipo)))
+	if err != nil {
+		return err
+	}
+
+	//return "", fmt.Errorf("failed to get client id: " + strconv.Itoa(tipo))
+
+	//--------------------------------------------------------
 
 	//-----------------------------------------------------------
+	// If the destinatary user is another student check lending balance
+	//-----------------------------------------------------------
 
-	//añadir if que mire si la transacción es a otro estudiante-------------------------------------------
+	//Check user and recipient affiliation
+	var recKey string
+	recKey = recipient + "type"
+
+	recipientTypeBytes, err := ctx.GetStub().GetState(recKey)
+	recipientType, _ := strconv.Atoi(string(recipientTypeBytes))
+	return fmt.Errorf("the recipient type is " + strconv.Itoa(recipientType))
+
+	//Get recipient type (THIS NEEDS TO BE UPDATED)
+
+	//Check that minter is from the minters department
+	var studentType interface{} = "department2"
+	if cert.Subject.Names[2].Value == studentType {
+		return fmt.Errorf("This payment is from a student to a student")
+	} */
+
+	//-----------------------------------------------------------
 
 	// Prepare lending Balance key of current user
 	var userLendingBalance string
@@ -348,6 +360,11 @@ func (s *SmartContract) Transfer(ctx contractapi.TransactionContextInterface, re
 		return err
 	}
 	//-----------------------------------------------------------
+
+	err = transferHelper(ctx, clientID, recipient, amount)
+	if err != nil {
+		return fmt.Errorf("failed to transfer: %v", err)
+	}
 
 	// Emit the Transfer event
 	transferEvent := event{clientID, recipient, amount}
