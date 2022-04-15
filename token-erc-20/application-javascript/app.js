@@ -27,7 +27,6 @@ function prettyJSONString(inputString) {
 }
 
 
-//EXPERIMENTAL
 var ccp;
 var caClient;
 var wallet;
@@ -107,7 +106,6 @@ async function main() {
 	await mint(org1User2Id, '3000');
 
 	await burn(org1User2Id, '1000');
-
 }
 
 main();
@@ -256,7 +254,7 @@ async function getClientAccountBalance(clientIdentity) {
 			gateway.disconnect();
 		}
 	} catch (error) {
-		//console.error(`******** FAILED to run the application: ${error}`);
+		console.error(`${error}`);
 	}
 }
 
