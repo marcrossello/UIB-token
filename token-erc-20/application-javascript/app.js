@@ -16,11 +16,13 @@ const mspOrg1 = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet');
 
 
-const org1UserId = 'appUser';
-const org1User2Id = 'appUser2';
+const org1Minter = 'appUser';
+const org1Student1 = 'appUser2';
+const org1Student2 = 'appUser3';
 
-const appUserAccount = "eDUwOTo6Q049YXBwVXNlcixPVT1vcmcxK09VPWNsaWVudCtPVT1kZXBhcnRtZW50MTo6Q049Y2Eub3JnMS5leGFtcGxlLmNvbSxPPW9yZzEuZXhhbXBsZS5jb20sTD1EdXJoYW0sU1Q9Tm9ydGggQ2Fyb2xpbmEsQz1VUw==";
-const appUser2Account = "eDUwOTo6Q049YXBwVXNlcjIsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
+const minterAccount = "eDUwOTo6Q049YXBwVXNlcixPVT1vcmcxK09VPWNsaWVudCtPVT1kZXBhcnRtZW50MTo6Q049Y2Eub3JnMS5leGFtcGxlLmNvbSxPPW9yZzEuZXhhbXBsZS5jb20sTD1EdXJoYW0sU1Q9Tm9ydGggQ2Fyb2xpbmEsQz1VUw==";
+const student1Account = "eDUwOTo6Q049YXBwVXNlcjIsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
+const student2Account = "eDUwOTo6Q049YXBwVXNlcjMsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
 
 function prettyJSONString(inputString) {
 	return JSON.stringify(JSON.parse(inputString), null, 2);
@@ -48,9 +50,10 @@ async function main() {
 
 		// in a real application this would be done only when a new user was required to be added
 		// and would be part of an administrative flow
-		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1UserId, 'org1.department1');
+		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1Minter, 'org1.department1');
 
-		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1User2Id, 'org1.department2');
+		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1Student1, 'org1.department2');
+		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1Student2, 'org1.department2');
 
 		// Create a new gateway instance for interacting with the fabric network.
 		// In a real application this would be done as the backend server session is setup for
@@ -68,8 +71,9 @@ async function main() {
 	console.log("USERS INFO");
 	console.log("--------------------------------------------------------------------");
 
-	await getClientAccountID(org1UserId);
-	await getClientAccountID(org1User2Id);
+	await getClientAccountID(org1Minter);
+	await getClientAccountID(org1Student1);
+	await getClientAccountID(org1Student2);
 
 
 	console.log("\n--------------------------------------------------------------------");
@@ -77,24 +81,26 @@ async function main() {
 	console.log("--------------------------------------------------------------------");
 
 	//ALLOWED OPERATIONS ZONE
-	await mint(org1UserId, '5000');
+	await mint(org1Minter, '5000');
 
-	await getClientAccountBalance(org1UserId);
+	await getClientAccountBalance(org1Minter);
 
-	await transfer(org1UserId, '700', org1User2Id, appUser2Account);
+	await transfer(org1Minter, '700', org1Student1, student1Account);
 
-	await getClientAccountBalance(org1UserId);
-	await getClientAccountBalance(org1User2Id);
+	await getClientAccountBalance(org1Minter);
+	await getClientAccountBalance(org1Student1);
 
-	await transfer(org1User2Id, '200', org1UserId, appUserAccount);
+	await transfer(org1Student1, '200', org1Minter, minterAccount);
 
-	await getClientAccountBalance(org1User2Id);
-	await getClientAccountBalance(org1UserId);
+	await getClientAccountBalance(org1Student1);
+	await getClientAccountBalance(org1Minter);
 
-	await burn(org1UserId, '1000');
-	await getClientAccountBalance(org1UserId);
+	await burn(org1Minter, '1000');
+	await getClientAccountBalance(org1Minter);
 
 	await getTotalSupply();
+
+	await transfer(org1Student1, '700', org1Student2, student2Account);
 
 	console.log("\n--------------------------------------------------------------------");
 	console.log("RESTRICTED OPERATIONS INFO");
@@ -103,9 +109,9 @@ async function main() {
 	//RESTRICTED OPERATIONS ZONE
 	//Now let's try some restricted operations
 
-	await mint(org1User2Id, '3000');
+	await mint(org1Student1, '3000');
 
-	await burn(org1User2Id, '1000');
+	await burn(org1Student1, '1000');
 }
 
 main();
@@ -264,7 +270,7 @@ async function getTotalSupply() {
 		try {
 			await gateway.connect(ccp, {
 				wallet,
-				identity: org1UserId,
+				identity: org1Minter,
 				discovery: { enabled: true, asLocalhost: true }
 			});
 

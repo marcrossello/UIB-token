@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
+
+	b64 "encoding/base64"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
@@ -21,6 +24,10 @@ const lending = "lendingBalance"
 
 // Define limit for the lending balance of users
 const lendingLimit = 500
+
+// Define the student and minter department names
+const student = "department2"
+const minter = "department1"
 
 // SmartContract provides functions for transferring tokens between accounts
 type SmartContract struct {
@@ -258,107 +265,75 @@ func (s *SmartContract) Transfer(ctx contractapi.TransactionContextInterface, re
 		return fmt.Errorf("failed to get client id: %v", err)
 	}
 
-	//--------------------------------------------------------
-	//THIS NEEDS TO BE UPDATED
-	// Put client certificate in world state
-	// Get ID of submitting client identity
-
-	//Get client certificate
-	/* cert, err := ctx.GetClientIdentity().GetX509Certificate()
-	if err != nil {
-		return fmt.Errorf("failed to get client id: %v", err)
-	}
-
-	str := fmt.Sprintf("%v", cert.Subject.Names[2].Value)
-
-	var tipo int
-	if str == "department1" {
-		tipo = 5
-	} else {
-		tipo = 200
-	}
-
-	var key string
-	key = clientID + "type"
-
-	//Check that minter is from the minters department
-	err = ctx.GetStub().PutState(key, []byte(strconv.Itoa(tipo)))
-	if err != nil {
-		return err
-	}
-
-	//return "", fmt.Errorf("failed to get client id: " + strconv.Itoa(tipo))
-
-	//--------------------------------------------------------
-
 	//-----------------------------------------------------------
 	// If the destinatary user is another student check lending balance
 	//-----------------------------------------------------------
 
-	//Check user and recipient affiliation
-	var recKey string
-	recKey = recipient + "type"
-
-	recipientTypeBytes, err := ctx.GetStub().GetState(recKey)
-	recipientType, _ := strconv.Atoi(string(recipientTypeBytes))
-	return fmt.Errorf("the recipient type is " + strconv.Itoa(recipientType))
-
-	//Get recipient type (THIS NEEDS TO BE UPDATED)
-
-	//Check that minter is from the minters department
-	var studentType interface{} = "department2"
-	if cert.Subject.Names[2].Value == studentType {
-		return fmt.Errorf("This payment is from a student to a student")
-	} */
-
-	//-----------------------------------------------------------
-
-	// Prepare lending Balance key of current user
-	var userLendingBalance string
-	userLendingBalance = clientID + lending
-
-	// Get lendingBalance of current user from World State
-	lendingBalanceBytes, err := ctx.GetStub().GetState(userLendingBalance)
-
-	// Convert lendingBalance to integer
-	lendingBalance, _ := strconv.Atoi(string(lendingBalanceBytes)) // Error handling not needed since Itoa() was used when setting the totalSupply, guaranteeing it was an integer.
-
-	newLendingBalance := lendingBalance - amount
-
-	if newLendingBalance < -lendingLimit {
-		return fmt.Errorf("This user would exceed the maximum lending balance with this transaction\nCurrent lending balance: " + strconv.Itoa(lendingBalance) + "\nLimit lending balance: " + strconv.Itoa(lendingLimit) + "\nLending balance after transaction: " + strconv.Itoa(newLendingBalance))
-	}
-
-	var recipientLendingBalance string
-	recipientLendingBalance = recipient + lending
-
-	lendingBalanceBytesRecipient, err := ctx.GetStub().GetState(recipientLendingBalance)
+	// Get the client type
+	cert, err := ctx.GetClientIdentity().GetX509Certificate()
 	if err != nil {
-		return fmt.Errorf("failed to read from world state: %v", err)
-	}
-	/* 	if lendingBalanceBytesRecipient == nil {
-		return fmt.Errorf("the account %s does not exist", recipient)
-	} */
-
-	lendingBalanceRecipient, _ := strconv.Atoi(string(lendingBalanceBytesRecipient)) // Error handling not needed since Itoa() was used when setting the account balance, guaranteeing it was an integer.
-
-	newLendingBalanceRecipient := lendingBalanceRecipient + amount
-
-	if newLendingBalanceRecipient > lendingLimit {
-		return fmt.Errorf("Recipient would exceed maximum lending balance with this transaction, \nRecipient's current lending balance: " + strconv.Itoa(lendingBalanceRecipient) + "\nLimit lending balance: " + strconv.Itoa(lendingLimit) + "\nLending balance after transaction: " + strconv.Itoa(newLendingBalanceRecipient))
+		return fmt.Errorf("failed to get client id: %v", err)
 	}
 
-	// Set the new lending balance for user
-	err = ctx.GetStub().PutState(userLendingBalance, []byte(strconv.Itoa(newLendingBalance)))
-	if err != nil {
-		return err
+	userType := fmt.Sprintf("%v", cert.Subject.Names[2].Value)
+
+	// Get the recipient type
+	decoded, _ := b64.StdEncoding.DecodeString(recipient)
+	decodedString := string(decoded)
+	slicedString := strings.Split(decodedString, "::")
+	strs := strings.Split(slicedString[1], "=")
+	recipientType := strs[len(strs)-1]
+
+	// Check if they are both students
+	if userType == "department2" && recipientType == "department2" {
+		// Prepare lending Balance key of current user
+		var userLendingBalance string
+		userLendingBalance = clientID + lending
+
+		// Get lendingBalance of current user from World State
+		lendingBalanceBytes, err := ctx.GetStub().GetState(userLendingBalance)
+
+		// Convert lendingBalance to integer
+		lendingBalance, _ := strconv.Atoi(string(lendingBalanceBytes)) // Error handling not needed since Itoa() was used when setting the totalSupply, guaranteeing it was an integer.
+
+		newLendingBalance := lendingBalance - amount
+
+		if newLendingBalance < -lendingLimit {
+			return fmt.Errorf("This user would exceed the maximum lending balance with this transaction\nCurrent lending balance: " + strconv.Itoa(lendingBalance) + "\nLimit lending balance: -" + strconv.Itoa(lendingLimit) + "\nLending balance after transaction: " + strconv.Itoa(newLendingBalance))
+		}
+
+		var recipientLendingBalance string
+		recipientLendingBalance = recipient + lending
+
+		lendingBalanceBytesRecipient, err := ctx.GetStub().GetState(recipientLendingBalance)
+		if err != nil {
+			return fmt.Errorf("failed to read from world state: %v", err)
+		}
+		/* 	if lendingBalanceBytesRecipient == nil {
+			return fmt.Errorf("the account %s does not exist", recipient)
+		} */
+
+		lendingBalanceRecipient, _ := strconv.Atoi(string(lendingBalanceBytesRecipient)) // Error handling not needed since Itoa() was used when setting the account balance, guaranteeing it was an integer.
+
+		newLendingBalanceRecipient := lendingBalanceRecipient + amount
+
+		if newLendingBalanceRecipient > lendingLimit {
+			return fmt.Errorf("Recipient would exceed maximum lending balance with this transaction, \nRecipient's current lending balance: " + strconv.Itoa(lendingBalanceRecipient) + "\nLimit lending balance: " + strconv.Itoa(lendingLimit) + "\nLending balance after transaction: " + strconv.Itoa(newLendingBalanceRecipient))
+		}
+
+		// Set the new lending balance for user
+		err = ctx.GetStub().PutState(userLendingBalance, []byte(strconv.Itoa(newLendingBalance)))
+		if err != nil {
+			return err
+		}
+
+		// Set the new lending balance for recipient
+		err = ctx.GetStub().PutState(recipientLendingBalance, []byte(strconv.Itoa(newLendingBalanceRecipient)))
+		if err != nil {
+			return err
+		}
 	}
 
-	// Set the new lending balance for recipient
-	err = ctx.GetStub().PutState(recipientLendingBalance, []byte(strconv.Itoa(newLendingBalanceRecipient)))
-	if err != nil {
-		return err
-	}
 	//-----------------------------------------------------------
 
 	err = transferHelper(ctx, clientID, recipient, amount)
