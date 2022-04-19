@@ -8,25 +8,27 @@ const { Gateway, Wallets } = require('fabric-network');
 const FabricCAServices = require('fabric-ca-client');
 const path = require('path');
 const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../application/javascript/CAUtil.js');
-const { buildCCPOrg1, buildWallet } = require('../../application/javascript/AppUtil.js');
+const { buildCCPOrg1, buildWallet, buildCCPOrg2 } = require('../../application/javascript/AppUtil.js');
 
 const channelName = 'mychannel';
 const chaincodeName = 'token_erc20';
 const mspOrg1 = 'Org1MSP';
+const mspOrg2 = 'Org2MSP';
 const walletPath = path.join(__dirname, 'wallet');
+const walletPath2 = path.join(__dirname, 'wallet2');
 
 
-const uibUser = 'UIB';
-const org1Student1 = 'appUser1';
-const org1Student2 = 'appUser2';
+const org1Minter = 'minter';
+const org1Student1 = 'appUser2';
+const org1Student2 = 'appUser3';
 
-const org2User = 'orgColaboradora';
+const org2User = 'orgColaboradora'
 
-const uibUserAccount = "eDUwOTo6Q049VUlCLE9VPW9yZzErT1U9Y2xpZW50K09VPWRlcGFydG1lbnQxOjpDTj1jYS5vcmcxLmV4YW1wbGUuY29tLE89b3JnMS5leGFtcGxlLmNvbSxMPUR1cmhhbSxTVD1Ob3J0aCBDYXJvbGluYSxDPVVT";
-const student1Account = "eDUwOTo6Q049YXBwVXNlcjEsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
-const student2Account = "eDUwOTo6Q049YXBwVXNlcjIsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
+const minterAccount = "eDUwOTo6Q049YXBwVXNlcixPVT1vcmcxK09VPWNsaWVudCtPVT1kZXBhcnRtZW50MTo6Q049Y2Eub3JnMS5leGFtcGxlLmNvbSxPPW9yZzEuZXhhbXBsZS5jb20sTD1EdXJoYW0sU1Q9Tm9ydGggQ2Fyb2xpbmEsQz1VUw==";
+const student1Account = "eDUwOTo6Q049YXBwVXNlcjIsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
+const student2Account = "eDUwOTo6Q049YXBwVXNlcjMsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
 
-const org2UserAccount = "eDUwOTo6Q049b3JnQ29sYWJvcmFkb3JhLE9VPW9yZzIrT1U9Y2xpZW50K09VPWRlcGFydG1lbnQxOjpDTj1jYS5vcmcyLmV4YW1wbGUuY29tLE89b3JnMi5leGFtcGxlLmNvbSxMPUh1cnNsZXksU1Q9SGFtcHNoaXJlLEM9VUs=";
+
 
 function prettyJSONString(inputString) {
 	return JSON.stringify(JSON.parse(inputString), null, 2);
@@ -36,6 +38,10 @@ function prettyJSONString(inputString) {
 var ccp;
 var caClient;
 var wallet;
+
+var ccp2;
+var caClient2;
+var wallet2;
 
 async function main() {
 	try {
@@ -54,10 +60,29 @@ async function main() {
 
 		// in a real application this would be done only when a new user was required to be added
 		// and would be part of an administrative flow
-		await registerAndEnrollUser(caClient, wallet, mspOrg1, uibUser, 'org1.department1');
+		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1Minter, 'org1.department1');
 
 		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1Student1, 'org1.department2');
 		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1Student2, 'org1.department2');
+
+
+
+		// build an in memory object with the network configuration (also known as a connection profile)
+		ccp2 = buildCCPOrg2();
+
+		// build an instance of the fabric ca services client based on
+		// the information in the network configuration
+		caClient2 = buildCAClient(FabricCAServices, ccp2, 'ca.org2.example.com');
+
+		// setup the wallet to hold the credentials of the application user
+		wallet2 = await buildWallet(Wallets, walletPath2);
+
+		// in a real application this would be done on an administrative flow, and only once
+		await enrollAdmin(caClient2, wallet2, mspOrg2);
+
+		// in a real application this would be done only when a new user was required to be added
+		// and would be part of an administrative flow
+		await registerAndEnrollUser(caClient2, wallet2, mspOrg2, org2User, 'org2.department1');
 
 		// Create a new gateway instance for interacting with the fabric network.
 		// In a real application this would be done as the backend server session is setup for
@@ -75,9 +100,10 @@ async function main() {
 	console.log("USERS INFO");
 	console.log("--------------------------------------------------------------------");
 
-	await getClientAccountID(uibUser);
-	await getClientAccountID(org1Student1);
-	await getClientAccountID(org1Student2);
+	await getClientAccountID(org1Minter, 1);
+	await getClientAccountID(org1Student1, 1);
+	await getClientAccountID(org1Student2, 1);
+	await getClientAccountID(org2User, 2);
 
 
 	console.log("\n--------------------------------------------------------------------");
@@ -85,28 +111,26 @@ async function main() {
 	console.log("--------------------------------------------------------------------");
 
 	//ALLOWED OPERATIONS ZONE
-	await mint(uibUser, '5000');
+	await mint(org1Minter, '5000');
 
-	await getClientAccountBalance(uibUser);
+	await getClientAccountBalance(org1Minter);
 
-	await transfer(uibUser, '700', org1Student1, student1Account);
+	await transfer(org1Minter, '700', org1Student1, student1Account);
 
-	await getClientAccountBalance(uibUser);
+	await getClientAccountBalance(org1Minter);
 	await getClientAccountBalance(org1Student1);
 
-	await transfer(org1Student1, '200', uibUser, uibUserAccount);
+	await transfer(org1Student1, '200', org1Minter, minterAccount);
 
 	await getClientAccountBalance(org1Student1);
-	await getClientAccountBalance(uibUser);
+	await getClientAccountBalance(org1Minter);
 
-	await burn(uibUser, '1000');
-	await getClientAccountBalance(uibUser);
+	await burn(org1Minter, '1000');
+	await getClientAccountBalance(org1Minter);
 
 	await getTotalSupply();
 
 	await transfer(org1Student1, '700', org1Student2, student2Account);
-
-	await transfer(org1Student1, '350', org2User, org2UserAccount);
 
 	console.log("\n--------------------------------------------------------------------");
 	console.log("RESTRICTED OPERATIONS INFO");
@@ -211,17 +235,30 @@ async function transfer(clientIdentity, amount, recipient, recipientAccount) {
 	}
 }
 
-async function getClientAccountID(clientIdentity) {
+async function getClientAccountID(clientIdentity, orgNumber) {
 	try {
 		const gateway = new Gateway();
 		try {
-			await gateway.connect(ccp, {
-				wallet,
-				identity: clientIdentity,
-				discovery: { enabled: true, asLocalhost: true }
-			});
+			if (orgNumber == 1){
+				console.log("wallet1")
+				await gateway.connect(ccp, {
+					wallet,
+					identity: clientIdentity,
+					discovery: { enabled: true, asLocalhost: true }
+				});
+			}else {
+				console.log("wallet2")
+				await gateway.connect(ccp2, {
+					wallet2,
+					identity: clientIdentity,
+					discovery: { enabled: true, asLocalhost: true }
+				});
+			}
+
+			console.log("a")
 
 			const network = await gateway.getNetwork(channelName);
+			console.log("b")
 			const contract = network.getContract(chaincodeName);
 
 			let result;
@@ -276,7 +313,7 @@ async function getTotalSupply() {
 		try {
 			await gateway.connect(ccp, {
 				wallet,
-				identity: uibUser,
+				identity: org1Minter,
 				discovery: { enabled: true, asLocalhost: true }
 			});
 

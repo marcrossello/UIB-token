@@ -14,11 +14,13 @@ printf "${CYAN}-----------------------------------------------------------------
 printf "${CYAN}Executing aplication${NC}\n"
 printf "${CYAN}------------------------------------------------------------------------------------${NC}\n"
 node ../token-erc-20/application-javascript/app.js
+node ../token-erc-20/application-javascript/app2.js
 
 printf "${CYAN}Bringing network down${NC}\n"
 ./network.sh down
 
 printf "${CYAN}Deleting wallet file${NC}\n"
 rm -r ../token-erc-20/application-javascript/wallet
+rm -r ../token-erc-20/application-javascript/wallet2
 
 printf "${CYAN}Simulation completed${NC}\n"
