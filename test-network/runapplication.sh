@@ -15,6 +15,7 @@ printf "${CYAN}Executing aplication${NC}\n"
 printf "${CYAN}------------------------------------------------------------------------------------${NC}\n"
 node ../token-erc-20/application-javascript/app.js
 node ../token-erc-20/application-javascript/app2.js
+node ../token-erc-20/application-javascript/app3.js
 
 printf "${CYAN}Bringing network down${NC}\n"
 ./network.sh down
