@@ -1,12 +1,14 @@
 package chaincode
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	b64 "encoding/base64"
 
@@ -212,6 +214,11 @@ func (s *SmartContract) Burn(ctx contractapi.TransactionContextInterface, amount
 	currentBalance, _ = strconv.Atoi(string(currentBalanceBytes)) // Error handling not needed since Itoa() was used when setting the account balance, guaranteeing it was an integer.
 
 	updatedBalance := currentBalance - amount
+
+	// Check that the burn amount is smaller than the account's token amount
+	if updatedBalance < 0 {
+		return errors.New("burn amount must be smaller than the account balance")
+	}
 
 	err = ctx.GetStub().PutState(minter, []byte(strconv.Itoa(updatedBalance)))
 	if err != nil {
@@ -427,6 +434,68 @@ func (s *SmartContract) TotalSupply(ctx contractapi.TransactionContextInterface)
 	log.Printf("TotalSupply: %d tokens", totalSupply)
 
 	return totalSupply, nil
+}
+
+// TotalSupply returns the total token supply
+func (s *SmartContract) GetTransactionHistory(ctx contractapi.TransactionContextInterface) (string, error) {
+
+	// Get ID of submitting client identity
+	client, err := ctx.GetClientIdentity().GetID()
+	if err != nil {
+		return "", fmt.Errorf("failed to get client id: %v", err)
+	}
+
+	// Retrieve total supply of tokens from state of smart contract
+	resultsIterator, err := ctx.GetStub().GetHistoryForKey(client)
+	if err != nil {
+		return "", fmt.Errorf("failed to retrieve transaction history: %v", err)
+	}
+	defer resultsIterator.Close()
+
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+
+	bArrayMemberAlreadyWritten := false
+	for resultsIterator.HasNext() {
+		response, err := resultsIterator.Next()
+		if err != nil {
+			return "", fmt.Errorf("failed to retrieve transaction history: %v", err)
+		}
+		// Add a comma before array members, suppress it for the first array member
+		if bArrayMemberAlreadyWritten == true {
+			buffer.WriteString(",")
+		}
+		buffer.WriteString("{\"TxId\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(response.TxId)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Value\":")
+		// if it was a delete operation on given key, then we need to set the
+		//corresponding value null. Else, we will write the response.Value
+		//as-is (as the Value itself a JSON marble)
+		if response.IsDelete {
+			buffer.WriteString("null")
+		} else {
+			buffer.WriteString(string(response.Value))
+		}
+
+		buffer.WriteString(", \"Timestamp\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(time.Unix(response.Timestamp.Seconds, int64(response.Timestamp.Nanos)).String())
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"IsDelete\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(strconv.FormatBool(response.IsDelete))
+		buffer.WriteString("\"")
+
+		buffer.WriteString("}")
+		bArrayMemberAlreadyWritten = true
+	}
+	buffer.WriteString("]")
+
+	return buffer.String(), nil
 }
 
 // Helper Functions
