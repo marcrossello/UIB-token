@@ -62,7 +62,7 @@ async function main() {
 		// Create a new gateway instance for interacting with the fabric network.
 		// In a real application this would be done as the backend server session is setup for
 		// a user that has been verified.
-		const gateway = new Gateway();
+		//const gateway = new Gateway();
 
 		console.log('\x1b[36m%s\x1b[0m', 'I am cyan');  //cyan
 
@@ -79,12 +79,11 @@ async function main() {
 	await getClientAccountID(org1Student1);
 	await getClientAccountID(org1Student2);
 
-
+	//ALLOWED OPERATIONS ZONE
 	console.log("\n--------------------------------------------------------------------");
 	console.log("ALLOWED OPERATIONS");
 	console.log("--------------------------------------------------------------------");
 
-	//ALLOWED OPERATIONS ZONE
 	await mint(uibUser, '5000');
 
 	await getClientAccountBalance(uibUser);
@@ -108,6 +107,10 @@ async function main() {
 
 	await transfer(org1Student1, '350', org2User, org2UserAccount);
 
+	//
+	await getTransactionHistory(uibUser);
+	//
+
 	console.log("\n--------------------------------------------------------------------");
 	console.log("RESTRICTED OPERATIONS INFO");
 	console.log("--------------------------------------------------------------------");
@@ -115,9 +118,14 @@ async function main() {
 	//RESTRICTED OPERATIONS ZONE
 	//Now let's try some restricted operations
 
+	// User without mint permissions tries to mint
 	await mint(org1Student1, '3000');
 
+	// User without burn permissions tries to burn
 	await burn(org1Student1, '1000');
+
+	// User with burn permissions tries to burn more tokens than those in their account
+	await burn(uibUser, '20000')
 }
 
 main();
@@ -296,5 +304,34 @@ async function getTotalSupply() {
 		}
 	} catch (error) {
 		//console.error(`******** FAILED to run the application: ${error}`);
+	}
+}
+
+async function getTransactionHistory(clientIdentity) {
+	try {
+		const gateway = new Gateway();
+		try {
+			await gateway.connect(ccp, {
+				wallet,
+				identity: clientIdentity,
+				discovery: { enabled: true, asLocalhost: true }
+			});
+
+			const network = await gateway.getNetwork(channelName);
+			const contract = network.getContract(chaincodeName);
+
+			let result;
+
+			console.log('\n--> Getting ' + clientIdentity + ' transaction history');
+			result = await contract.evaluateTransaction('GetTransactionHistory');
+			console.log('*** ' + clientIdentity + ' transaction history: ' + result);
+
+		} finally {
+			// Disconnect from the gateway when the application is closing
+			// This will close all connections to the network
+			gateway.disconnect();
+		}
+	} catch (error) {
+		console.error(`${error}`);
 	}
 }

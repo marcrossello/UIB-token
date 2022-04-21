@@ -8,27 +8,30 @@ const { Gateway, Wallets } = require('fabric-network');
 const FabricCAServices = require('fabric-ca-client');
 const path = require('path');
 const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../application/javascript/CAUtil.js');
-const { buildCCPOrg1, buildWallet, buildCCPOrg2 } = require('../../application/javascript/AppUtil.js');
+const { buildCCPOrg1, buildWallet } = require('../../application/javascript/AppUtil.js');
 
 const channelName = 'mychannel';
 const chaincodeName = 'token_erc20';
-const mspOrg2 = 'Org2MSP';
+const mspOrg1 = 'Org1MSP';
+const walletPath = path.join(__dirname, 'wallet');
 
-const walletPath = path.join(__dirname, 'wallet2');
 
 const uibUser = 'UIB';
+const org1Student1 = 'appUser1';
+const org1Student2 = 'appUser2';
 
 const org2User = 'orgColaboradora';
 
 const uibUserAccount = "eDUwOTo6Q049VUlCLE9VPW9yZzErT1U9Y2xpZW50K09VPWRlcGFydG1lbnQxOjpDTj1jYS5vcmcxLmV4YW1wbGUuY29tLE89b3JnMS5leGFtcGxlLmNvbSxMPUR1cmhhbSxTVD1Ob3J0aCBDYXJvbGluYSxDPVVT";
-const student1Account = "";
-const student2Account = "";
+const student1Account = "eDUwOTo6Q049YXBwVXNlcjEsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
+const student2Account = "eDUwOTo6Q049YXBwVXNlcjIsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
 
-
+const org2UserAccount = "eDUwOTo6Q049b3JnQ29sYWJvcmFkb3JhLE9VPW9yZzIrT1U9Y2xpZW50K09VPWRlcGFydG1lbnQxOjpDTj1jYS5vcmcyLmV4YW1wbGUuY29tLE89b3JnMi5leGFtcGxlLmNvbSxMPUh1cnNsZXksU1Q9SGFtcHNoaXJlLEM9VUs=";
 
 function prettyJSONString(inputString) {
 	return JSON.stringify(JSON.parse(inputString), null, 2);
 }
+
 
 var ccp;
 var caClient;
@@ -36,54 +39,24 @@ var wallet;
 
 async function main() {
 	try {
-		console.log('\n')
 		// build an in memory object with the network configuration (also known as a connection profile)
-		ccp = buildCCPOrg2();
+		ccp = buildCCPOrg1();
 
 		// build an instance of the fabric ca services client based on
 		// the information in the network configuration
-		caClient = buildCAClient(FabricCAServices, ccp, 'ca.org2.example.com');
-
+		caClient = buildCAClient(FabricCAServices, ccp, 'ca.org1.example.com');
 
 		// setup the wallet to hold the credentials of the application user
 		wallet = await buildWallet(Wallets, walletPath);
-
-		// in a real application this would be done on an administrative flow, and only once
-		await enrollAdmin(caClient, wallet, mspOrg2);
-
-		// in a real application this would be done only when a new user was required to be added
-		// and would be part of an administrative flow
-		await registerAndEnrollUser(caClient, wallet, mspOrg2, org2User, 'org2.department1');
 
 
 	} catch (error) {
 		console.error(`******** FAILED to run the application: ${error}`);
 	}
+	
+	await getClientAccountBalance(uibUser);
 
-	//USER INFO ZONE
-	console.log("\n--------------------------------------------------------------------");
-	console.log("USERS INFO");
-	console.log("--------------------------------------------------------------------");
-
-	await getClientAccountID(org2User);
-
-
-	console.log("\n--------------------------------------------------------------------");
-	console.log("ALLOWED OPERATIONS");
-	console.log("--------------------------------------------------------------------");
-
-	//ALLOWED OPERATIONS ZONE
-
-	await getClientAccountBalance(org2User);
-
-	await transfer(org2User, '350', uibUser, uibUserAccount);
-
-	await getClientAccountBalance(org2User);
-
-	//
-	await getTransactionHistory(org2User);
-	//
-
+	await getTotalSupply();
 
 }
 
@@ -178,7 +151,7 @@ async function transfer(clientIdentity, amount, recipient, recipientAccount) {
 	}
 }
 
-async function getClientAccountID(clientIdentity, orgNumber) {
+async function getClientAccountID(clientIdentity) {
 	try {
 		const gateway = new Gateway();
 		try {
