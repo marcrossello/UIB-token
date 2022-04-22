@@ -15,6 +15,10 @@ const chaincodeName = 'token_erc20';
 const mspOrg1 = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet');
 
+// names for channel and chaincode of colaboration
+const channelName = 'uibcollaborationchannel';
+const chaincodeName = 'token_erc20col';
+
 
 const uibUser = 'UIB';
 const org1Student1 = 'appUser1';
@@ -63,6 +67,8 @@ async function main() {
 		// In a real application this would be done as the backend server session is setup for
 		// a user that has been verified.
 		//const gateway = new Gateway();
+
+		//initOrg2(); //does the same as main() but with org2
 
 		console.log('\x1b[36m%s\x1b[0m', 'I am cyan');  //cyan
 

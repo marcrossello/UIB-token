@@ -7,8 +7,14 @@ NC='\033[0m' # No Color
 printf "${CYAN}Bringing network up with channel mychannel and certification authority${NC}\n"
 ./network.sh up createChannel -ca
 
-printf "${CYAN}Deploying chaincode${NC}\n"
+printf "${CYAN}Creating channel uibcollaborationchannel${NC}\n"
+./network.sh createChannel -c uibcollaborationchannel
+
+printf "${CYAN}Deploying chaincode in channel mychannel${NC}\n"
 ./network.sh deployCC -ccn token_erc20 -ccp ../token-erc-20/chaincode-go/ -ccl go
+
+printf "${CYAN}Deploying chaincode in channel uibcollaborationchannel${NC}\n"
+./network.sh deployCC -ccn token_erc20col -ccp ../token-erc-20/chaincode-go/ -ccl go -c uibcollaborationchannel
 
 printf "${CYAN}------------------------------------------------------------------------------------${NC}\n"
 printf "${CYAN}Executing aplication${NC}\n"
