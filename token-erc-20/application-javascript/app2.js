@@ -18,7 +18,7 @@ const walletPath = path.join(__dirname, 'wallet2');
 
 const uibUser = 'UIB';
 
-const org2User = 'orgColaboradora';
+const org2User = 'universidad2';
 
 const uibUserAccount = "eDUwOTo6Q049VUlCLE9VPW9yZzErT1U9Y2xpZW50K09VPWRlcGFydG1lbnQxOjpDTj1jYS5vcmcxLmV4YW1wbGUuY29tLE89b3JnMS5leGFtcGxlLmNvbSxMPUR1cmhhbSxTVD1Ob3J0aCBDYXJvbGluYSxDPVVT";
 const student1Account = "";
