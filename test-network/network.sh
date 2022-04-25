@@ -1,8 +1,6 @@
 #!/bin/bash
 #
-# Copyright IBM Corp All Rights Reserved
-#
-# SPDX-License-Identifier: Apache-2.0
+# This is an IBM Corp file that has been modified by Marc Rossello
 #
 
 # This script brings up a Hyperledger Fabric network for testing smart contracts
