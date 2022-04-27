@@ -11,7 +11,7 @@ const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../app
 const { buildCCPOrg1, buildCCPOrg3, buildWallet } = require('../../application/javascript/AppUtil.js');
 
 const channelName = 'collaborationchannel';
-const chaincodeName = 'token_erc20col';
+const chaincodeName = 'assetschain';
 const mspOrg3 = 'Org3MSP';
 const walletPath = path.join(__dirname, 'wallet');
 
