@@ -8,23 +8,19 @@ const { Gateway, Wallets } = require('fabric-network');
 const FabricCAServices = require('fabric-ca-client');
 const path = require('path');
 const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../application/javascript/CAUtil.js');
-const { buildCCPOrg1, buildWallet } = require('../../application/javascript/AppUtil.js');
+const { buildCCPOrg1, buildCCPOrg3, buildWallet } = require('../../application/javascript/AppUtil.js');
 
-const channelName = 'mychannel';
-const chaincodeName = 'token_erc20';
-const mspOrg1 = 'Org1MSP';
+const channelName = 'collaborationchannel';
+const chaincodeName = 'token_erc20col';
+const mspOrg3 = 'Org3MSP';
 const walletPath = path.join(__dirname, 'wallet');
-
-// names for channel and chaincode of colaboration
-const channelName2 = 'uibcollaborationchannel';
-const chaincodeName2 = 'token_erc20col';
 
 
 const uibUser = 'UIB';
 const org1Student1 = 'appUser1';
 const org1Student2 = 'appUser2';
 
-const org2User = 'universidad2';
+const org3User = 'orgColab';
 
 const uibUserAccount = "eDUwOTo6Q049VUlCLE9VPW9yZzErT1U9Y2xpZW50K09VPWRlcGFydG1lbnQxOjpDTj1jYS5vcmcxLmV4YW1wbGUuY29tLE89b3JnMS5leGFtcGxlLmNvbSxMPUR1cmhhbSxTVD1Ob3J0aCBDYXJvbGluYSxDPVVT";
 const student1Account = "eDUwOTo6Q049YXBwVXNlcjEsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
@@ -44,51 +40,19 @@ var wallet;
 async function main() {
 	try {
 		// build an in memory object with the network configuration (also known as a connection profile)
-		ccp = buildCCPOrg1();
+		ccp = buildCCPOrg3();
 
 		// build an instance of the fabric ca services client based on
 		// the information in the network configuration
-		caClient = buildCAClient(FabricCAServices, ccp, 'ca.org1.example.com');
+		caClient = buildCAClient(FabricCAServices, ccp, 'ca.org3.example.com');
 
 		// setup the wallet to hold the credentials of the application user
 		wallet = await buildWallet(Wallets, walletPath);
 
-		// in a real application this would be done on an administrative flow, and only once
-		await enrollAdmin(caClient, wallet, mspOrg1);
-
-		// in a real application this would be done only when a new user was required to be added
-		// and would be part of an administrative flow
-		await registerAndEnrollUser(caClient, wallet, mspOrg1, uibUser, 'org1.department1');
-
-		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1Student1, 'org1.department2');
-		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1Student2, 'org1.department2');
-
-		// Create a new gateway instance for interacting with the fabric network.
-		// In a real application this would be done as the backend server session is setup for
-		// a user that has been verified.
-		//const gateway = new Gateway();
-
-		//initOrg2(); //does the same as main() but with org2 (try with separate functions) also have to add buildCCPOrg2 to const { buildCCPOrg1, buildWallet } = require('../../application/javascript/AppUtil.js');
-
-		console.log('\x1b[36m%s\x1b[0m', 'I am cyan');  //cyan
 
 	} catch (error) {
 		console.error(`******** FAILED to run the application: ${error}`);
 	}
-
-	//USER INFO ZONE
-	console.log("\n--------------------------------------------------------------------");
-	console.log("USERS INFO");
-	console.log("--------------------------------------------------------------------");
-
-	await getClientAccountID(uibUser);
-	await getClientAccountID(org1Student1);
-	await getClientAccountID(org1Student2);
-
-	//ALLOWED OPERATIONS ZONE
-	console.log("\n--------------------------------------------------------------------");
-	console.log("ALLOWED OPERATIONS");
-	console.log("--------------------------------------------------------------------");
 
 	await mint(uibUser, '5000');
 
@@ -107,31 +71,13 @@ async function main() {
 	await burn(uibUser, '1000');
 	await getClientAccountBalance(uibUser);
 
+	
+	await getClientAccountBalance(uibUser);
+
 	await getTotalSupply();
 
-	await transfer(org1Student1, '700', org1Student2, student2Account);
 
-	await transfer(org1Student1, '350', org2User, org2UserAccount);
 
-	//
-	await getTransactionHistory(uibUser);
-	//
-
-	console.log("\n--------------------------------------------------------------------");
-	console.log("RESTRICTED OPERATIONS INFO");
-	console.log("--------------------------------------------------------------------");
-
-	//RESTRICTED OPERATIONS ZONE
-	//Now let's try some restricted operations
-
-	// User without mint permissions tries to mint
-	await mint(org1Student1, '3000');
-
-	// User without burn permissions tries to burn
-	await burn(org1Student1, '1000');
-
-	// User with burn permissions tries to burn more tokens than those in their account
-	await burn(uibUser, '20000')
 }
 
 main();
