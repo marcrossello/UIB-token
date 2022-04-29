@@ -239,7 +239,10 @@ async function main() {
 	await assetExists(uibUser, uibUserNumber, "asset1");
 	await assetExists(uibUser, uibUserNumber, "asset2");
 	await readAsset(uibUser, uibUserNumber, "asset1");
-	
+
+	await exchange(org1Student1, 1, "asset3", "padelReservation", "100");
+	await getAllAssets(uibUser, uibUserNumber);
+
 }
 
 main();
@@ -586,7 +589,7 @@ async function getAllAssets(clientIdentity, orgNum) {
 
 			let result;
 
-			console.log('\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger');
+			console.log('\n--> Getting all assets in the ledger');
 			result = await contract.evaluateTransaction('GetAllAssets');
 			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
 
@@ -632,7 +635,7 @@ async function createAsset(clientIdentity, orgNum, assetID, assetType, assetValu
 
 			let result;
 
-			console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
+			console.log('\n--> Creating asset ' + assetID + ' of type ' + assetType + ', value ' + assetValue + ', and owner ' + assetOwner);
 			result = await contract.submitTransaction('CreateAsset', assetID, assetType, assetValue, assetOwner);
 			console.log('*** Result: committed');
 			if (`${result}` !== '') {
@@ -681,7 +684,7 @@ async function readAsset(clientIdentity, orgNum, assetId) {
 
 			let result;
 
-			console.log('\n--> Evaluate Transaction: ReadAsset, function returns an asset with a given assetID');
+			console.log('\n--> Reading information of asset: ' + assetId);
 			result = await contract.evaluateTransaction('ReadAsset', assetId);
 			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
 
@@ -727,7 +730,7 @@ async function assetExists(clientIdentity, orgNum, assetId) {
 
 			let result;
 
-			console.log('\n--> Evaluate Transaction: AssetExists, function returns "true" if an asset with given assetID exist');
+			console.log('\n--> Checking if asset: ' + assetId + ' exists');
 			result = await contract.evaluateTransaction('AssetExists', assetId);
 			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
 
@@ -741,7 +744,14 @@ async function assetExists(clientIdentity, orgNum, assetId) {
 	}
 }
 
-async function exchange(clientIdentity, orgNum, assetId, tokenAmount) {
-	transfer(clientIdentity, uibUserNumber, tokenAmount, uibUser, uibUserAccount);
+async function exchange(clientIdentity, orgNum, assetId, assetType, tokenAmount) {
+	console.log("User " + clientIdentity + " is exchanging " + tokenAmount + " tokens for " + assetType);
+	await getClientAccountBalance(uibUser, uibUserNumber); // Get info to test correct functionality (unnecessary)
+	await getClientAccountBalance(clientIdentity, orgNum); // Get info to test correct functionality (unnecessary)
+	await transfer(clientIdentity, orgNum, tokenAmount, uibUser, uibUserAccount);
+	await getClientAccountBalance(uibUser, uibUserNumber); // Get info to test correct functionality (unnecessary)
+	await getClientAccountBalance(clientIdentity, orgNum); // Get info to test correct functionality (unnecessary)
+	await createAsset(org3User, org3UserNumber, assetId, assetType, tokenAmount, clientIdentity);
+	await readAsset(uibUser, uibUserNumber, "asset1"); // Get info to test correct functionality (unnecessary)
 }
 
