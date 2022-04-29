@@ -158,30 +158,30 @@ async function main() {
 	console.log("ALLOWED OPERATIONS");
 	console.log("--------------------------------------------------------------------");
 
-	await mint(uibUser, '5000', uibUserNumber);
+	await mint(uibUser, uibUserNumber, '5000');
 
-	await mint(org2User, '5000', org2UserNumber);
+	await mint(org2User, org2UserNumber, '5000');
 
 	await getClientAccountBalance(uibUser, uibUserNumber);
 
-	await transfer(uibUser, '700', org1Student1, student1Account, uibUserNumber);
+	await transfer(uibUser, uibUserNumber, '700', org1Student1, student1Account);
 
 	await getClientAccountBalance(uibUser, uibUserNumber);
 	await getClientAccountBalance(org1Student1, org1Student1Number);
 
-	await transfer(org1Student1, '200', uibUser, uibUserAccount, org1Student1Number);
+	await transfer(org1Student1, org1Student1Number, '200', uibUser, uibUserAccount);
 
 	await getClientAccountBalance(org1Student1, org1Student1Number);
 	await getClientAccountBalance(uibUser, uibUserNumber);
 
-	await burn(uibUser, '1000', uibUserNumber);
+	await burn(uibUser, uibUserNumber, '1000');
 	await getClientAccountBalance(uibUser, uibUserNumber);
 
 	await getTotalSupply();
 
-	await transfer(org1Student1, '700', org1Student2, student2Account, org1Student1Number);
+	await transfer(org1Student1, org1Student1Number, '700', org1Student2, student2Account);
 
-	await transfer(org1Student1, '350', org2User, org2UserAccount, org1Student1Number);
+	await transfer(org1Student1, org1Student1Number, '350', org2User, org2UserAccount);
 
 	//
 	await getTransactionHistory(uibUser, uibUserNumber);
@@ -195,13 +195,13 @@ async function main() {
 	//Now let's try some restricted operations
 
 	// User without mint permissions tries to mint
-	await mint(org1Student1, '3000', org1Student1Number);
+	await mint(org1Student1, org1Student1Number, '3000');
 
 	// User without burn permissions tries to burn
-	await burn(org1Student1, '1000', org1Student1Number);
+	await burn(org1Student1, org1Student1Number, '1000');
 
 	// User with burn permissions tries to burn more tokens than those in their account
-	await burn(uibUser, '20000', uibUserNumber);
+	await burn(uibUser, uibUserNumber, '20000');
 
 	//USER INFO ZONE
 	console.log("\n--------------------------------------------------------------------");
@@ -219,7 +219,7 @@ async function main() {
 
 	await getClientAccountBalance(org2User, org2UserNumber);
 
-	await transfer(org2User, '350', uibUser, uibUserAccount, org2UserNumber);
+	await transfer(org2User, org2UserNumber, '350', uibUser, uibUserAccount);
 
 	await getClientAccountBalance(org2User, org2UserNumber);
 
@@ -230,13 +230,23 @@ async function main() {
 	await getClientAccountBalance(uibUser, uibUserNumber);
 
 	await getTotalSupply();
+
+
+
+	await createAsset(uibUser, uibUserNumber, "asset1", "book", "50", org1Student1);
+	await createAsset(uibUser, uibUserNumber, "asset2", "coffee", "20", org1Student2);
+	await getAllAssets(uibUser, uibUserNumber);
+	await assetExists(uibUser, uibUserNumber, "asset1");
+	await assetExists(uibUser, uibUserNumber, "asset2");
+	await readAsset(uibUser, uibUserNumber, "asset1");
+	
 }
 
 main();
 
 //Function that mints tokens for a given client
 //amount is a string
-async function mint(clientIdentity, amount, orgNum) {
+async function mint(clientIdentity, orgNum, amount) {
 	try {
 		const gateway = new Gateway();
 		try {
@@ -282,7 +292,7 @@ async function mint(clientIdentity, amount, orgNum) {
 	}
 }
 
-async function burn(clientIdentity, amount, orgNum) {
+async function burn(clientIdentity, orgNum, amount) {
 	try {
 		const gateway = new Gateway();
 		try {
@@ -328,7 +338,7 @@ async function burn(clientIdentity, amount, orgNum) {
 	}
 }
 
-async function transfer(clientIdentity, amount, recipient, recipientAccount, orgNum) {
+async function transfer(clientIdentity, orgNum, amount, recipient, recipientAccount) {
 	try {
 		const gateway = new Gateway();
 		try {
@@ -541,3 +551,197 @@ async function getTransactionHistory(clientIdentity, orgNum) {
 		console.error(`${error}`);
 	}
 }
+
+//Asset transfer functions
+
+async function getAllAssets(clientIdentity, orgNum) {
+	try {
+		const gateway = new Gateway();
+		try {
+			switch (orgNum) {
+				case 1:
+					await gateway.connect(ccp, {
+						wallet: wallet,
+						identity: clientIdentity,
+						discovery: { enabled: true, asLocalhost: true }
+					});
+					break;
+				case 2:
+					await gateway.connect(ccp2, {
+						wallet: wallet2,
+						identity: clientIdentity,
+						discovery: { enabled: true, asLocalhost: true }
+					});
+					break;
+				default:
+					await gateway.connect(ccp3, {
+						wallet: wallet3,
+						identity: clientIdentity,
+						discovery: { enabled: true, asLocalhost: true }
+					});
+			}
+
+			const network = await gateway.getNetwork(channelName2);
+			const contract = network.getContract(chaincodeName2);
+
+			let result;
+
+			console.log('\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger');
+			result = await contract.evaluateTransaction('GetAllAssets');
+			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
+
+		} finally {
+			// Disconnect from the gateway when the application is closing
+			// This will close all connections to the network
+			gateway.disconnect();
+		}
+	} catch (error) {
+		//console.error(`******** FAILED to run the application: ${error}`);
+	}
+}
+
+async function createAsset(clientIdentity, orgNum, assetID, assetType, assetValue, assetOwner) {
+	try {
+		const gateway = new Gateway();
+		try {
+			switch (orgNum) {
+				case 1:
+					await gateway.connect(ccp, {
+						wallet: wallet,
+						identity: clientIdentity,
+						discovery: { enabled: true, asLocalhost: true }
+					});
+					break;
+				case 2:
+					await gateway.connect(ccp2, {
+						wallet: wallet2,
+						identity: clientIdentity,
+						discovery: { enabled: true, asLocalhost: true }
+					});
+					break;
+				default:
+					await gateway.connect(ccp3, {
+						wallet: wallet3,
+						identity: clientIdentity,
+						discovery: { enabled: true, asLocalhost: true }
+					});
+			}
+
+			const network = await gateway.getNetwork(channelName2);
+			const contract = network.getContract(chaincodeName2);
+
+			let result;
+
+			console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
+			result = await contract.submitTransaction('CreateAsset', assetID, assetType, assetValue, assetOwner);
+			console.log('*** Result: committed');
+			if (`${result}` !== '') {
+				console.log(`*** Result: ${prettyJSONString(result.toString())}`);
+			}
+
+		} finally {
+			// Disconnect from the gateway when the application is closing
+			// This will close all connections to the network
+			gateway.disconnect();
+		}
+	} catch (error) {
+		//console.error(`******** FAILED to run the application: ${error}`);
+	}
+}
+
+async function readAsset(clientIdentity, orgNum, assetId) {
+	try {
+		const gateway = new Gateway();
+		try {
+			switch (orgNum) {
+				case 1:
+					await gateway.connect(ccp, {
+						wallet: wallet,
+						identity: clientIdentity,
+						discovery: { enabled: true, asLocalhost: true }
+					});
+					break;
+				case 2:
+					await gateway.connect(ccp2, {
+						wallet: wallet2,
+						identity: clientIdentity,
+						discovery: { enabled: true, asLocalhost: true }
+					});
+					break;
+				default:
+					await gateway.connect(ccp3, {
+						wallet: wallet3,
+						identity: clientIdentity,
+						discovery: { enabled: true, asLocalhost: true }
+					});
+			}
+
+			const network = await gateway.getNetwork(channelName2);
+			const contract = network.getContract(chaincodeName2);
+
+			let result;
+
+			console.log('\n--> Evaluate Transaction: ReadAsset, function returns an asset with a given assetID');
+			result = await contract.evaluateTransaction('ReadAsset', assetId);
+			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
+
+		} finally {
+			// Disconnect from the gateway when the application is closing
+			// This will close all connections to the network
+			gateway.disconnect();
+		}
+	} catch (error) {
+		//console.error(`******** FAILED to run the application: ${error}`);
+	}
+}
+
+async function assetExists(clientIdentity, orgNum, assetId) {
+	try {
+		const gateway = new Gateway();
+		try {
+			switch (orgNum) {
+				case 1:
+					await gateway.connect(ccp, {
+						wallet: wallet,
+						identity: clientIdentity,
+						discovery: { enabled: true, asLocalhost: true }
+					});
+					break;
+				case 2:
+					await gateway.connect(ccp2, {
+						wallet: wallet2,
+						identity: clientIdentity,
+						discovery: { enabled: true, asLocalhost: true }
+					});
+					break;
+				default:
+					await gateway.connect(ccp3, {
+						wallet: wallet3,
+						identity: clientIdentity,
+						discovery: { enabled: true, asLocalhost: true }
+					});
+			}
+
+			const network = await gateway.getNetwork(channelName2);
+			const contract = network.getContract(chaincodeName2);
+
+			let result;
+
+			console.log('\n--> Evaluate Transaction: AssetExists, function returns "true" if an asset with given assetID exist');
+			result = await contract.evaluateTransaction('AssetExists', assetId);
+			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
+
+		} finally {
+			// Disconnect from the gateway when the application is closing
+			// This will close all connections to the network
+			gateway.disconnect();
+		}
+	} catch (error) {
+		//console.error(`******** FAILED to run the application: ${error}`);
+	}
+}
+
+async function exchange(clientIdentity, orgNum, assetId, tokenAmount) {
+	transfer(clientIdentity, uibUserNumber, tokenAmount, uibUser, uibUserAccount);
+}
+
