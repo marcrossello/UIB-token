@@ -32,7 +32,7 @@ node ../token-erc-20/application-javascript/app.js
 printf "${CYAN}Bringing network down${NC}\n"
 ./network.sh down
 
-printf "${CYAN}Deleting wallet file${NC}\n"
+printf "${CYAN}Deleting wallets${NC}\n"
 rm -r ../token-erc-20/application-javascript/wallet
 rm -r ../token-erc-20/application-javascript/wallet2
 rm -r ../token-erc-20/application-javascript/wallet3

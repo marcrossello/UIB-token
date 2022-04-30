@@ -48,14 +48,14 @@ type event struct {
 func (s *SmartContract) Mint(ctx contractapi.TransactionContextInterface, amount int) error {
 
 	// Check minter authorization - this sample assumes Org1 is the central banker with privilege to mint new tokens
-	clientMSPID, err := ctx.GetClientIdentity().GetMSPID()
+	/* clientMSPID, err := ctx.GetClientIdentity().GetMSPID()
 	//Esta comprobación tiene que servir para determinar si el usuario es administración de la UIB o un estudiante
 	if err != nil {
 		return fmt.Errorf("failed to get MSPID: %v", err)
 	}
-	if clientMSPID != "Org1MSP" { //cambiar Org1 por UIB????
+	if clientMSPID != "Org1MSP" {
 		return fmt.Errorf("client is not authorized to mint new tokens")
-	}
+	} */
 
 	//-----------------------------------------------------------
 
