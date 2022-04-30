@@ -10,58 +10,60 @@ const path = require('path');
 const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../application/javascript/CAUtil.js');
 const { buildCCPOrg1, buildCCPOrg2, buildCCPOrg3, buildWallet } = require('../../application/javascript/AppUtil.js');
 
+// Token channel and chaincode names
 const channelName = 'mychannel';
 const chaincodeName = 'token_erc20';
 
-const mspOrg1 = 'Org1MSP';
-const mspOrg2 = 'Org2MSP';
-const mspOrg3 = 'Org3MSP';
-
-const walletPath = path.join(__dirname, 'wallet');
-const walletPath2 = path.join(__dirname, 'wallet2');
-const walletPath3 = path.join(__dirname, 'wallet3');
-
-// names for channel and chaincode of colaboration
+// Collaboration channel and chaincode names
 const channelName2 = 'collaborationchannel';
 const chaincodeName2 = 'assetschain';
 
 
-const uibUser = 'UIB';
-const uibUserNumber = 1;
-const org1Student1 = 'appUser1';
-const org1Student1Number = 1;
-const org1Student2 = 'appUser2';
-const org1Student2Number = 1;
-
-const org2User = 'universidad2';
-const org2UserNumber = 2;
-
-
-const org3User = 'orgColab';
-const org3UserNumber = 3;
-
-const uibUserAccount = "eDUwOTo6Q049VUlCLE9VPW9yZzErT1U9Y2xpZW50K09VPWRlcGFydG1lbnQxOjpDTj1jYS5vcmcxLmV4YW1wbGUuY29tLE89b3JnMS5leGFtcGxlLmNvbSxMPUR1cmhhbSxTVD1Ob3J0aCBDYXJvbGluYSxDPVVT";
-const student1Account = "eDUwOTo6Q049YXBwVXNlcjEsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
-const student2Account = "eDUwOTo6Q049YXBwVXNlcjIsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
-
-const org2UserAccount = "eDUwOTo6Q049dW5pdmVyc2lkYWQyLE9VPW9yZzIrT1U9Y2xpZW50K09VPWRlcGFydG1lbnQxOjpDTj1jYS5vcmcyLmV4YW1wbGUuY29tLE89b3JnMi5leGFtcGxlLmNvbSxMPUh1cnNsZXksU1Q9SGFtcHNoaXJlLEM9VUs=";
-
-function prettyJSONString(inputString) {
-	return JSON.stringify(JSON.parse(inputString), null, 2);
-}
-
-
+// ORGANISATIONS
+// Org1 variables
 var ccp;
 var caClient;
 var wallet;
+const mspOrg1 = 'Org1MSP';
+const walletPath = path.join(__dirname, 'wallet');
 
+// Org2 variables
 var ccp2;
 var caClient2;
 var wallet2;
+const mspOrg2 = 'Org2MSP';
+const walletPath2 = path.join(__dirname, 'wallet2');
 
+// Org3 variables
 var ccp3;
 var caClient3;
 var wallet3;
+const mspOrg3 = 'Org3MSP';
+const walletPath3 = path.join(__dirname, 'wallet3');
+
+
+// USERS
+// Org1 users
+const uibUser = 'UIB';
+const uibUserNumber = 1;
+const uibUserAccount = "eDUwOTo6Q049VUlCLE9VPW9yZzErT1U9Y2xpZW50K09VPWRlcGFydG1lbnQxOjpDTj1jYS5vcmcxLmV4YW1wbGUuY29tLE89b3JnMS5leGFtcGxlLmNvbSxMPUR1cmhhbSxTVD1Ob3J0aCBDYXJvbGluYSxDPVVT";
+
+const org1Student1 = 'appUser1';
+const org1Student1Number = 1;
+const student1Account = "eDUwOTo6Q049YXBwVXNlcjEsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
+
+const org1Student2 = 'appUser2';
+const org1Student2Number = 1;
+const student2Account = "eDUwOTo6Q049YXBwVXNlcjIsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
+
+// Org2 users
+const org2User = 'universidad2';
+const org2UserNumber = 2;
+const org2UserAccount = "eDUwOTo6Q049dW5pdmVyc2lkYWQyLE9VPW9yZzIrT1U9Y2xpZW50K09VPWRlcGFydG1lbnQxOjpDTj1jYS5vcmcyLmV4YW1wbGUuY29tLE89b3JnMi5leGFtcGxlLmNvbSxMPUh1cnNsZXksU1Q9SGFtcHNoaXJlLEM9VUs=";
+
+// Org3 users
+const org3User = 'orgColab';
+const org3UserNumber = 3;
 
 
 async function initOrg1() {
@@ -86,22 +88,12 @@ async function initOrg1() {
 		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1Student1, 'org1.department2');
 		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1Student2, 'org1.department2');
 
-		// Create a new gateway instance for interacting with the fabric network.
-		// In a real application this would be done as the backend server session is setup for
-		// a user that has been verified.
-		//const gateway = new Gateway();
-
-
-
-		console.log('\x1b[36m%s\x1b[0m', 'I am cyan');  //cyan
+		console.log('\x1b[36m%s\x1b[0m', 'End of org1 initialisation');
 
 	} catch (error) {
 		console.error(`******** FAILED to run the application: ${error}`);
 	}
 }
-
-
-
 
 async function initOrg2() {
 	try {
@@ -112,7 +104,7 @@ async function initOrg2() {
 		await enrollAdmin(caClient2, wallet2, mspOrg2);
 		await registerAndEnrollUser(caClient2, wallet2, mspOrg2, org2User, 'org2.department1');
 
-		console.log('\x1b[36m%s\x1b[0m', 'I am cyan');  //cyan
+		console.log('\x1b[36m%s\x1b[0m', 'End of org2 initialisation');
 
 	} catch (error) {
 		console.error(`******** FAILED to run the application: ${error}`);
@@ -128,7 +120,7 @@ async function initOrg3() {
 		await enrollAdmin(caClient3, wallet3, mspOrg3);
 		await registerAndEnrollUser(caClient3, wallet3, mspOrg3, org3User, 'org3.department1');
 
-		console.log('\x1b[36m%s\x1b[0m', 'I am cyan');  //cyan
+		console.log('\x1b[36m%s\x1b[0m', 'End of org3 initialisation');
 
 	} catch (error) {
 		console.error(`******** FAILED to run the application: ${error}`);
@@ -138,11 +130,8 @@ async function initOrg3() {
 async function main() {
 
 	await initOrg1();
-
 	await initOrg2();
-
 	await initOrg3();
-
 
 	//USER INFO ZONE
 	console.log("\n--------------------------------------------------------------------");
@@ -152,6 +141,8 @@ async function main() {
 	await getClientAccountID(uibUser, uibUserNumber);
 	await getClientAccountID(org1Student1, org1Student1Number);
 	await getClientAccountID(org1Student2, org1Student2Number);
+
+	await getClientAccountID(org2User, org2UserNumber);
 
 	//ALLOWED OPERATIONS ZONE
 	console.log("\n--------------------------------------------------------------------");
@@ -192,7 +183,7 @@ async function main() {
 	console.log("--------------------------------------------------------------------");
 
 	//RESTRICTED OPERATIONS ZONE
-	//Now let's try some restricted operations
+	// Now let's try some restricted operations
 
 	// User without mint permissions tries to mint
 	await mint(org1Student1, org1Student1Number, '3000');
@@ -202,14 +193,6 @@ async function main() {
 
 	// User with burn permissions tries to burn more tokens than those in their account
 	await burn(uibUser, uibUserNumber, '20000');
-
-	//USER INFO ZONE
-	console.log("\n--------------------------------------------------------------------");
-	console.log("USERS INFO");
-	console.log("--------------------------------------------------------------------");
-
-	await getClientAccountID(org2User, org2UserNumber);
-
 
 	console.log("\n--------------------------------------------------------------------");
 	console.log("ALLOWED OPERATIONS");
@@ -753,5 +736,9 @@ async function exchange(clientIdentity, orgNum, assetId, assetType, tokenAmount)
 	await getClientAccountBalance(clientIdentity, orgNum); // Get info to test correct functionality (unnecessary)
 	await createAsset(org3User, org3UserNumber, assetId, assetType, tokenAmount, clientIdentity);
 	await readAsset(uibUser, uibUserNumber, "asset1"); // Get info to test correct functionality (unnecessary)
+}
+
+function prettyJSONString(inputString) {
+	return JSON.stringify(JSON.parse(inputString), null, 2);
 }
 
