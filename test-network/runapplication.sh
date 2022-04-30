@@ -24,17 +24,14 @@ printf "${CYAN}Deploying chaincode in channel collaborationchannel${NC}\n"
 printf "${CYAN}------------------------------------------------------------------------------------${NC}\n"
 printf "${CYAN}Executing aplication${NC}\n"
 printf "${CYAN}------------------------------------------------------------------------------------${NC}\n"
-node ../token-erc-20/application-javascript/app.js
-#node ../token-erc-20/application-javascript/app2.js
-#node ../token-erc-20/application-javascript/app3.js
-#node ../token-erc-20/application-javascript/app4.js
+node ../application/application-javascript/app.js
 
 printf "${CYAN}Bringing network down${NC}\n"
 ./network.sh down
 
 printf "${CYAN}Deleting wallets${NC}\n"
-rm -r ../token-erc-20/application-javascript/wallet
-rm -r ../token-erc-20/application-javascript/wallet2
-rm -r ../token-erc-20/application-javascript/wallet3
+rm -r ../application/application-javascript/wallet
+rm -r ../application/application-javascript/wallet2
+rm -r ../application/application-javascript/wallet3
 
 printf "${CYAN}Simulation completed${NC}\n"
