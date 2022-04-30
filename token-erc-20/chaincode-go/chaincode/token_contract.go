@@ -25,7 +25,7 @@ const allowancePrefix = "allowance"
 const lending = "lendingBalance"
 
 // Define limit for the lending balance of users
-const lendingLimit = 500
+const lendingLimit = 200
 
 // Define the student and minter department names
 const student = "department2"
@@ -437,7 +437,7 @@ func (s *SmartContract) TotalSupply(ctx contractapi.TransactionContextInterface)
 }
 
 // TotalSupply returns the total token supply
-func (s *SmartContract) GetTransactionHistory(ctx contractapi.TransactionContextInterface) (string, error) {
+func (s *SmartContract) GetBalanceHistory(ctx contractapi.TransactionContextInterface) (string, error) {
 
 	// Get ID of submitting client identity
 	client, err := ctx.GetClientIdentity().GetID()
