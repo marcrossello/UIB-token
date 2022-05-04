@@ -60,7 +60,6 @@ const org1Student3 = 'appUser3';
 const org1Student3Number = 1;
 const student3Account = "eDUwOTo6Q049YXBwVXNlcjMsT1U9b3JnMStPVT1jbGllbnQrT1U9ZGVwYXJ0bWVudDI6OkNOPWNhLm9yZzEuZXhhbXBsZS5jb20sTz1vcmcxLmV4YW1wbGUuY29tLEw9RHVyaGFtLFNUPU5vcnRoIENhcm9saW5hLEM9VVM=";
 
-
 // Org2 users
 const org2User = 'universidad2';
 const org2UserNumber = 2;
@@ -77,6 +76,7 @@ const org3UserNumber = 3;
 
 async function initOrg1() {
 	try {
+		console.log('\x1b[36m%s\x1b[0m', 'Initialising org1');
 		ccp = buildCCPOrg1();
 		caClient = buildCAClient(FabricCAServices, ccp, 'ca.org1.example.com');
 		wallet = await buildWallet(Wallets, walletPath);
@@ -89,8 +89,6 @@ async function initOrg1() {
 		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1Student2, 'org1.department2');
 		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1Student3, 'org1.department2');
 
-		console.log('\x1b[36m%s\x1b[0m', 'End of org1 initialisation');
-
 	} catch (error) {
 		console.error(`******** FAILED to run the application: ${error}`);
 	}
@@ -98,6 +96,7 @@ async function initOrg1() {
 
 async function initOrg2() {
 	try {
+		console.log('\x1b[36m%s\x1b[0m', 'Initialising org2');
 		ccp2 = buildCCPOrg2();
 		caClient2 = buildCAClient(FabricCAServices, ccp2, 'ca.org2.example.com');
 		wallet2 = await buildWallet(Wallets, walletPath2);
@@ -107,8 +106,6 @@ async function initOrg2() {
 
 		await registerAndEnrollUser(caClient2, wallet2, mspOrg2, org2Student1, 'org2.department2');
 
-		console.log('\x1b[36m%s\x1b[0m', 'End of org2 initialisation');
-
 	} catch (error) {
 		console.error(`******** FAILED to run the application: ${error}`);
 	}
@@ -116,14 +113,13 @@ async function initOrg2() {
 
 async function initOrg3() {
 	try {
+		console.log('\x1b[36m%s\x1b[0m', 'Initialising org3');
 		ccp3 = buildCCPOrg3();
 		caClient3 = buildCAClient(FabricCAServices, ccp3, 'ca.org3.example.com');
 		wallet3 = await buildWallet(Wallets, walletPath3);
 
 		await enrollAdmin(caClient3, wallet3, mspOrg3);
 		await registerAndEnrollUser(caClient3, wallet3, mspOrg3, org3User, 'org3.department1');
-
-		console.log('\x1b[36m%s\x1b[0m', 'End of org3 initialisation');
 
 	} catch (error) {
 		console.error(`******** FAILED to run the application: ${error}`);
@@ -156,30 +152,35 @@ async function main() {
 	console.log("SIMULATION");
 	console.log("--------------------------------------------------------------------");
 
-	// Uib user mints some tokens
-	await mint(uibUser, uibUserNumber, '5000');
+	// UIB mints and transfers tokens to users 1, 2, and 3
+	// This section simulates that users 1, 2, and 3 have done a "good" action and they are rewarded with tokens
+	console.log('\x1b[36m%s\x1b[0m', '\nUsers receive tokens form university');
+	await mint(uibUser, uibUserNumber, '300');
 	await getClientAccountBalance(uibUser, uibUserNumber);
 
-	// Student tries to mint tokens (returns error)
-	await mint(org1Student1, org1Student1Number, '3000');
-
-	// Universtity2 mints some tokens
-	//await mint(org2User, org2UserNumber, '5000');
-
-	// UIB transfers tokens to users 1, 2, and 3
-	await transfer(uibUser, uibUserNumber, '500', org1Student1, student1Account);
+	await transfer(uibUser, uibUserNumber, '300', org1Student1, student1Account);
 	await getClientAccountBalance(uibUser, uibUserNumber);
 	await getClientAccountBalance(org1Student1, org1Student1Number);
+
+
+	await mint(uibUser, uibUserNumber, '500');
+	await getClientAccountBalance(uibUser, uibUserNumber);
 
 	await transfer(uibUser, uibUserNumber, '500', org1Student2, student2Account);
 	await getClientAccountBalance(uibUser, uibUserNumber);
 	await getClientAccountBalance(org1Student2, org1Student2Number);
 
-	await transfer(uibUser, uibUserNumber, '500', org1Student3, student3Account);
+
+	await mint(uibUser, uibUserNumber, '200');
+	await getClientAccountBalance(uibUser, uibUserNumber);
+
+	await transfer(uibUser, uibUserNumber, '200', org1Student3, student3Account);
 	await getClientAccountBalance(uibUser, uibUserNumber);
 	await getClientAccountBalance(org1Student3, org1Student3Number);
 
 	// Transactions between users
+	console.log('\x1b[36m%s\x1b[0m', '\nUsers interact with each other');
+	// Now the users execute transactions with the tokens they just received
 	// Student 1 transfers to student 2
 	await transfer(org1Student1, org1Student1Number, '150', org1Student2, student2Account);
 	await getClientAccountBalance(org1Student1, org1Student1Number);
@@ -200,7 +201,7 @@ async function main() {
 	await transfer(org1Student2, org1Student2Number, '100', org1Student3, student3Account);
 	await getClientAccountBalance(org1Student2, org1Student2Number);
 	await getClientAccountBalance(org1Student3, org1Student3Number);
-	
+
 	// Student 1 transfers to student 2
 	// With this transaction student 1 exceeds the lending limit
 	await transfer(org1Student1, org1Student1Number, '70', org1Student2, student2Account);
@@ -214,24 +215,83 @@ async function main() {
 	await getClientAccountBalance(org1Student2, org1Student2Number);
 
 	// Student 2 transfers large amount to uib, here the limit does not apply
-	await transfer(org1Student2, org1Student2Number, '300', uibUser, uibUserAccount);
-	await getClientAccountBalance(org1Student2, org1Student2Number);
-	await getClientAccountBalance(uibUser, uibUserNumber);
+	/* 	await transfer(org1Student2, org1Student2Number, '300', uibUser, uibUserAccount);
+		await getClientAccountBalance(org1Student2, org1Student2Number);
+		await getClientAccountBalance(uibUser, uibUserNumber); */
 
 	// The total supply is equal to the amount of tokens minted
 	await getTotalSupply();
 
-	await burn(uibUser, uibUserNumber, '1000');
-	await getClientAccountBalance(uibUser, uibUserNumber);
-
-	// Now the total supply decreased because tokens were burned
-	await getTotalSupply();
 
 	// Getting transaction histories
+	console.log('\x1b[36m%s\x1b[0m', '\nGetting transaction histories\n');
 	await GetBalanceHistory(uibUser, uibUserNumber);
 	await GetBalanceHistory(org1Student1, org1Student1Number);
 	await GetBalanceHistory(org1Student2, org1Student2Number);
 	await GetBalanceHistory(org1Student3, org1Student3Number);
+
+	console.log("\n--------------------------------------------------------------------");
+	console.log("INTERACTION BETWEEN USERS OF DIFFERENT ORGANISATIONS");
+	console.log("--------------------------------------------------------------------");
+
+	console.log('\x1b[36m%s\x1b[0m', '\nUser 1 from org2 receives tokens form university');
+	// University 2 mints tokens and transfers them to user 1 from this university
+	await mint(org2User, org2UserNumber, '100');
+	await getClientAccountBalance(org2User, org2UserNumber);
+
+	await transfer(org2User, org2UserNumber, '100', org2Student1, org2Student1Account);
+	await getClientAccountBalance(org2User, org2UserNumber);
+	await getClientAccountBalance(org2Student1, org2Student1Number);
+
+	console.log('\x1b[36m%s\x1b[0m', '\nUsers from different universities interact with each other');
+
+	// Student 3 from org1 transfers tokens to student 1 from org 2
+	await transfer(org1Student3, org1Student3Number, '150', org2Student1, org2Student1Account);
+	await getClientAccountBalance(org1Student3, org1Student3Number);
+	await getClientAccountBalance(org2Student1, org2Student1Number);
+
+	// Student from org2 tries to transfer more tokens than lending limit
+	await transfer(org2Student1, org2Student1Number, '300', org1Student3, student3Account);
+	await getClientAccountBalance(org2Student1, org2Student1Number);
+	await getClientAccountBalance(org1Student3, org1Student3Number);
+
+	await transfer(org2Student1, org2Student1Number, '50', org1Student3, student3Account);
+	await getClientAccountBalance(org2Student1, org2Student1Number);
+	await getClientAccountBalance(org1Student3, org1Student3Number);
+
+	await GetBalanceHistory(org2Student1, org2Student1Number);
+
+	await getTotalSupply();
+
+	console.log("\n--------------------------------------------------------------------");
+	console.log("INTERACTIONS OF USERS WITH THE ASSETS CHANNEL");
+	console.log("--------------------------------------------------------------------");
+
+	/* // Test asset creation
+	await createAsset(uibUser, uibUserNumber, "asset1", "book", "50", org1Student1);
+	await createAsset(uibUser, uibUserNumber, "asset2", "coffee", "20", org1Student2);
+	await getAllAssets(uibUser, uibUserNumber); */
+
+	console.log('\x1b[36m%s\x1b[0m', '\nUsers spending tokens for rewards\n');
+
+	// Execute an exchange transaction of 30 for one coffee
+	await exchange(org1Student2, 1, "asset1", "coffee", "30");
+	await getAllAssets(uibUser, uibUserNumber);
+
+	// Execute an exchange transaction of 150 for one book
+	await exchange(org1Student3, 1, "asset2", "book", "100");
+	await getAllAssets(uibUser, uibUserNumber);
+
+	// Execute an exchange transaction of 100 for one padel reservation
+	await exchange(org1Student1, 1, "asset3", "padelReservation", "100");
+	await getAllAssets(uibUser, uibUserNumber);
+
+	// Test assetExists and readAssets functions
+	await assetExists(uibUser, uibUserNumber, "asset1");
+	await assetExists(uibUser, uibUserNumber, "asset2");
+	await assetExists(uibUser, uibUserNumber, "asset56");
+	await readAsset(uibUser, uibUserNumber, "asset1");
+
 
 	//RESTRICTED OPERATIONS ZONE
 	console.log("\n--------------------------------------------------------------------");
@@ -248,45 +308,12 @@ async function main() {
 	// User with burn permissions tries to burn more tokens than those in their account
 	await burn(uibUser, uibUserNumber, '20000');
 
+	// Student tries to mint tokens (returns error)
+	await mint(org1Student1, org1Student1Number, '3000');
+
 	// Try to execute token transaction to user from org 3 (not present in this channel)
 
 	// Try to execute function from collaborationchannel with org2 user (not present in this channel)
-
-	console.log("\n--------------------------------------------------------------------");
-	console.log("INTERACTION BETWEEN USERS OF DIFFERENT ORGANISATIONS");
-	console.log("--------------------------------------------------------------------");
-
-	// Student 3 from org1 transfers tokens to student 1 from org 2
-	await transfer(org1Student3, org1Student3Number, '150', org2Student1, org2Student1Account);
-	await getClientAccountBalance(org1Student3, org1Student3Number);
-	await getClientAccountBalance(org2Student1, org2Student1Number);
-
-	await transfer(org2Student1, org2Student1Number, '50', org1Student3, student3Account);
-	await getClientAccountBalance(org2Student1, org2Student1Number);
-	await getClientAccountBalance(org1Student3, org1Student3Number);
-
-	await GetBalanceHistory(org2Student1, org2Student1Number);
-
-	await getTotalSupply();
-
-	console.log("\n--------------------------------------------------------------------");
-	console.log("INTERACTIONS WITHIN THE ASSETS CHANNEL");
-	console.log("--------------------------------------------------------------------");
-
-	// Test asset creation
-	await createAsset(uibUser, uibUserNumber, "asset1", "book", "50", org1Student1);
-	await createAsset(uibUser, uibUserNumber, "asset2", "coffee", "20", org1Student2);
-	await getAllAssets(uibUser, uibUserNumber);
-
-	// Test assetExists and readAssets functions
-	await assetExists(uibUser, uibUserNumber, "asset1");
-	await assetExists(uibUser, uibUserNumber, "asset2");
-	await assetExists(uibUser, uibUserNumber, "asset56");
-	await readAsset(uibUser, uibUserNumber, "asset1");
-
-	// Execute an exchange transaction of 100 for one padel reservation
-	await exchange(org1Student1, 1, "asset3", "padelReservation", "100");
-	await getAllAssets(uibUser, uibUserNumber);
 }
 
 main();
@@ -330,8 +357,6 @@ async function mint(clientIdentity, orgNum, amount) {
 			console.log(`*** Completed`);
 
 		} finally {
-			// Disconnect from the gateway when the application is closing
-			// This will close all connections to the network
 			gateway.disconnect();
 		}
 	} catch (error) {
@@ -376,8 +401,6 @@ async function burn(clientIdentity, orgNum, amount) {
 			console.log(`*** Completed`);
 
 		} finally {
-			// Disconnect from the gateway when the application is closing
-			// This will close all connections to the network
 			gateway.disconnect();
 		}
 	} catch (error) {
@@ -422,8 +445,6 @@ async function transfer(clientIdentity, orgNum, amount, recipient, recipientAcco
 			console.log('*** Transferred ' + amount + ' tokens to ' + recipient);
 
 		} finally {
-			// Disconnect from the gateway when the application is closing
-			// This will close all connections to the network
 			gateway.disconnect();
 		}
 	} catch (error) {
@@ -469,8 +490,6 @@ async function getClientAccountID(clientIdentity, orgNum) {
 			console.log(Buffer.from(result.toString(), 'base64').toString('ascii'));
 
 		} finally {
-			// Disconnect from the gateway when the application is closing
-			// This will close all connections to the network
 			gateway.disconnect();
 		}
 	} catch (error) {
@@ -515,8 +534,6 @@ async function getClientAccountBalance(clientIdentity, orgNum) {
 			console.log('*** ' + clientIdentity + ' account balance: ' + result);
 
 		} finally {
-			// Disconnect from the gateway when the application is closing
-			// This will close all connections to the network
 			gateway.disconnect();
 		}
 	} catch (error) {
@@ -544,8 +561,6 @@ async function getTotalSupply() {
 			console.log(`*** Global token balance: ${result}`);
 
 		} finally {
-			// Disconnect from the gateway when the application is closing
-			// This will close all connections to the network
 			gateway.disconnect();
 		}
 	} catch (error) {
@@ -590,8 +605,6 @@ async function GetBalanceHistory(clientIdentity, orgNum) {
 			console.log('*** ' + clientIdentity + ' transaction history: ' + result);
 
 		} finally {
-			// Disconnect from the gateway when the application is closing
-			// This will close all connections to the network
 			gateway.disconnect();
 		}
 	} catch (error) {
@@ -638,8 +651,6 @@ async function getAllAssets(clientIdentity, orgNum) {
 			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
 
 		} finally {
-			// Disconnect from the gateway when the application is closing
-			// This will close all connections to the network
 			gateway.disconnect();
 		}
 	} catch (error) {
@@ -687,8 +698,6 @@ async function createAsset(clientIdentity, orgNum, assetID, assetType, assetValu
 			}
 
 		} finally {
-			// Disconnect from the gateway when the application is closing
-			// This will close all connections to the network
 			gateway.disconnect();
 		}
 	} catch (error) {
@@ -733,8 +742,6 @@ async function readAsset(clientIdentity, orgNum, assetId) {
 			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
 
 		} finally {
-			// Disconnect from the gateway when the application is closing
-			// This will close all connections to the network
 			gateway.disconnect();
 		}
 	} catch (error) {
@@ -779,8 +786,6 @@ async function assetExists(clientIdentity, orgNum, assetId) {
 			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
 
 		} finally {
-			// Disconnect from the gateway when the application is closing
-			// This will close all connections to the network
 			gateway.disconnect();
 		}
 	} catch (error) {
@@ -796,7 +801,10 @@ async function exchange(clientIdentity, orgNum, assetId, assetType, tokenAmount)
 	await getClientAccountBalance(uibUser, uibUserNumber); // Get info to test correct functionality (unnecessary)
 	await getClientAccountBalance(clientIdentity, orgNum); // Get info to test correct functionality (unnecessary)
 	await createAsset(org3User, org3UserNumber, assetId, assetType, tokenAmount, clientIdentity);
-	await readAsset(uibUser, uibUserNumber, "asset1"); // Get info to test correct functionality (unnecessary)
+	await readAsset(uibUser, uibUserNumber, assetId); // Get info to test correct functionality (unnecessary)
+	await getClientAccountBalance(uibUser, uibUserNumber); // Get info to test correct functionality (unnecessary)
+	await burn(uibUser, uibUserNumber, tokenAmount);
+	await getClientAccountBalance(uibUser, uibUserNumber); // Get info to test correct functionality (unnecessary)
 }
 
 function prettyJSONString(inputString) {
