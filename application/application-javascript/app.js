@@ -267,11 +267,6 @@ async function main() {
 	console.log("INTERACTIONS OF USERS WITH THE ASSETS CHANNEL");
 	console.log("--------------------------------------------------------------------");
 
-	/* // Test asset creation
-	await createAsset(uibUser, uibUserNumber, "asset1", "book", "50", org1Student1);
-	await createAsset(uibUser, uibUserNumber, "asset2", "coffee", "20", org1Student2);
-	await getAllAssets(uibUser, uibUserNumber); */
-
 	console.log('\x1b[36m%s\x1b[0m', '\nUsers spending tokens for rewards\n');
 
 	// Execute an exchange transaction of 30 for one coffee
@@ -305,18 +300,30 @@ async function main() {
 	// User without burn permissions tries to burn
 	await burn(org1Student1, org1Student1Number, '1000');
 
+	// User tries to transfer more tokens than those in their account (transfer is to uib to avoid lending limit)
+	await transfer(org1Student1, org1Student1Number, '5000', uibUser, uibUserAccount);
+
 	// User with burn permissions tries to burn more tokens than those in their account
 	await burn(uibUser, uibUserNumber, '20000');
 
-	// Student tries to mint tokens (returns error)
-	await mint(org1Student1, org1Student1Number, '3000');
+	// Try to mint, burn, and transfer negative amounts of tokens
+	await mint(uibUser, uibUserNumber, '-3000');
+	await burn(uibUser, uibUserNumber, '-3000');
+	await transfer(uibUser, uibUserNumber, '-100', org2User, org2UserAccount);
+	console.log();
 
 	// Try to execute token transaction to user from org 3 (not present in this channel)
+	await mint(org3User, org3UserNumber, '-3000');
+	console.log();
 
 	// Try to execute function from collaborationchannel with org2 user (not present in this channel)
+	await createAsset(org2User, org2UserNumber, "asset34", "restricted", "0", "not owned");
 }
 
 main();
+
+
+//TOKEN FUNCTIONS
 
 //Function that mints tokens for a given client
 //amount is a string
@@ -351,16 +358,23 @@ async function mint(clientIdentity, orgNum, amount) {
 			const contract = network.getContract(chaincodeName);
 
 			let result;
+			try {
 
 			console.log('\n--> User ' + clientIdentity + ' is minting ' + amount + ' tokens');
 			result = await contract.submitTransaction('Mint', amount);
 			console.log(`*** Completed`);
+				
+			} catch (error) {
+				
+			}
+
+			
 
 		} finally {
 			gateway.disconnect();
 		}
 	} catch (error) {
-		//console.error(`******** FAILED to run the application: ${error}`);
+		console.error(`FAILED to mint: ${error}`);
 	}
 }
 
@@ -612,7 +626,7 @@ async function GetBalanceHistory(clientIdentity, orgNum) {
 	}
 }
 
-//Asset transfer functions
+//ASSET TRANSFER FUNCTIONS
 
 async function getAllAssets(clientIdentity, orgNum) {
 	try {
@@ -701,7 +715,7 @@ async function createAsset(clientIdentity, orgNum, assetID, assetType, assetValu
 			gateway.disconnect();
 		}
 	} catch (error) {
-		//console.error(`******** FAILED to run the application: ${error}`);
+		console.error(`FAILED creating asset: ${error}`);
 	}
 }
 
