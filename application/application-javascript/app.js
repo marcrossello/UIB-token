@@ -312,8 +312,8 @@ async function main() {
 	await transfer(uibUser, uibUserNumber, '-100', org2User, org2UserAccount);
 	console.log();
 
-	// Try to execute token transaction to user from org 3 (not present in this channel)
-	await mint(org3User, org3UserNumber, '-3000');
+	// User from org2 tries to execute token transaction (this user is not present in this channel)
+	await mint(org3User, org3UserNumber, '3000');
 	console.log();
 
 	// Try to execute function from collaborationchannel with org2 user (not present in this channel)
