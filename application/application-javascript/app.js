@@ -224,7 +224,7 @@ async function main() {
 
 
 	// Getting transaction histories
-	console.log('\x1b[36m%s\x1b[0m', '\nGetting transaction histories');
+	console.log('\x1b[36m%s\x1b[0m', '\nGetting balance histories');
 	await GetBalanceHistory(uibUser, uibUserNumber);
 	await GetBalanceHistory(org1Student1, org1Student1Number);
 	await GetBalanceHistory(org1Student2, org1Student2Number);
@@ -274,7 +274,7 @@ async function main() {
 	await getAllAssets(uibUser, uibUserNumber);
 
 	// Execute an exchange transaction of 150 for one book
-	await exchange(org1Student3, 1, "asset2", "book", "100");
+	await exchange(org1Student3, 1, "asset2", "book", "150");
 	await getAllAssets(uibUser, uibUserNumber);
 
 	// Execute an exchange transaction of 100 for one padel reservation
