@@ -224,7 +224,7 @@ async function main() {
 
 
 	// Getting transaction histories
-	console.log('\x1b[36m%s\x1b[0m', '\nGetting transaction histories\n');
+	console.log('\x1b[36m%s\x1b[0m', '\nGetting transaction histories');
 	await GetBalanceHistory(uibUser, uibUserNumber);
 	await GetBalanceHistory(org1Student1, org1Student1Number);
 	await GetBalanceHistory(org1Student2, org1Student2Number);
