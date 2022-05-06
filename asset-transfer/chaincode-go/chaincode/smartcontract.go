@@ -16,7 +16,7 @@ type SmartContract struct {
 type Asset struct {
 	ID         string `json:"ID"`
 	Type       string `json:"type"`
-	TokenValue int    `json:"color"`
+	TokenValue int    `json:"value"`
 	Owner      string `json:"owner"`
 }
 
