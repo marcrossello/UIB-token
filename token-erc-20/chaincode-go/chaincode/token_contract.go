@@ -47,19 +47,7 @@ type event struct {
 // This function triggers a Transfer event
 func (s *SmartContract) Mint(ctx contractapi.TransactionContextInterface, amount int) error {
 
-	// Check minter authorization - this sample assumes Org1 is the central banker with privilege to mint new tokens
-	/* clientMSPID, err := ctx.GetClientIdentity().GetMSPID()
-	//Esta comprobación tiene que servir para determinar si el usuario es administración de la UIB o un estudiante
-	if err != nil {
-		return fmt.Errorf("failed to get MSPID: %v", err)
-	}
-	if clientMSPID != "Org1MSP" {
-		return fmt.Errorf("client is not authorized to mint new tokens")
-	} */
-
-	//-----------------------------------------------------------
-
-	//Check minter affiliation
+	//Check minter identity
 
 	//Get client certificate
 	ident, err := ctx.GetClientIdentity().GetX509Certificate()
@@ -67,24 +55,11 @@ func (s *SmartContract) Mint(ctx contractapi.TransactionContextInterface, amount
 		return fmt.Errorf("failed to get client id: %v", err)
 	}
 
-	//Print client attributes on the terminal (as an error)
-	/* return fmt.Errorf("\nClient Name: %v, \nClient Organization: %v, \nClient Department: %v, \nClient OrganizationalUnit: %v",
-	ident.Subject.CommonName, ident.Subject.Names[0], ident.Subject.Names[2], ident.Subject.OrganizationalUnit[2]) */
-
-	/* return fmt.Errorf("\nClient Name: %v, \nClient Organization: %v, \nClient Department: %v, \nClient OrganizationalUnit department: %v",
-	ident.Subject.CommonName, ident.Subject.Names[0].Value, ident.Subject.Names[2].Value, ident.Subject.OrganizationalUnit[2]) */
-	//Examples of values
-	//Subject.CommonName: appUser
-	//Subject.Names: [{2.5.4.11 org1} {2.5.4.11 client} {2.5.4.11 department1} {2.5.4.3 appUser}]
-	//Subject.OrganizationalUnit: [org1 client department1]
-
 	//Check that minter is from the minters department
 	var mintDepart interface{} = "department1"
 	if ident.Subject.Names[2].Value != mintDepart {
 		return fmt.Errorf("This user has no mint permissions")
 	}
-
-	//-----------------------------------------------------------
 
 	// Get ID of submitting client identity
 	minter, err := ctx.GetClientIdentity().GetID()
@@ -107,7 +82,7 @@ func (s *SmartContract) Mint(ctx contractapi.TransactionContextInterface, amount
 	if currentBalanceBytes == nil {
 		currentBalance = 0
 	} else {
-		currentBalance, _ = strconv.Atoi(string(currentBalanceBytes)) // Error handling not needed since Itoa() was used when setting the account balance, guaranteeing it was an integer.
+		currentBalance, _ = strconv.Atoi(string(currentBalanceBytes))
 	}
 
 	updatedBalance := currentBalance + amount
@@ -129,7 +104,7 @@ func (s *SmartContract) Mint(ctx contractapi.TransactionContextInterface, amount
 	if totalSupplyBytes == nil {
 		totalSupply = 0
 	} else {
-		totalSupply, _ = strconv.Atoi(string(totalSupplyBytes)) // Error handling not needed since Itoa() was used when setting the totalSupply, guaranteeing it was an integer.
+		totalSupply, _ = strconv.Atoi(string(totalSupplyBytes))
 	}
 
 	// Add the mint amount to the total supply and update the state
@@ -168,9 +143,7 @@ func (s *SmartContract) Burn(ctx contractapi.TransactionContextInterface, amount
 		return fmt.Errorf("client is not authorized to mint new tokens")
 	}
 
-	//-----------------------------------------------------------
-
-	//Check burner affiliation
+	//Check burner identity
 
 	//Get client certificate
 	ident, err := ctx.GetClientIdentity().GetX509Certificate()
@@ -186,8 +159,6 @@ func (s *SmartContract) Burn(ctx contractapi.TransactionContextInterface, amount
 	if ident.Subject.Names[2].Value != mintDepart {
 		return fmt.Errorf("This user has no burn permissions")
 	}
-
-	//-----------------------------------------------------------
 
 	// Get ID of submitting client identity
 	minter, err := ctx.GetClientIdentity().GetID()
@@ -211,8 +182,7 @@ func (s *SmartContract) Burn(ctx contractapi.TransactionContextInterface, amount
 		return errors.New("The balance does not exist")
 	}
 
-	currentBalance, _ = strconv.Atoi(string(currentBalanceBytes)) // Error handling not needed since Itoa() was used when setting the account balance, guaranteeing it was an integer.
-
+	currentBalance, _ = strconv.Atoi(string(currentBalanceBytes))
 	updatedBalance := currentBalance - amount
 
 	// Check that the burn amount is smaller than the account's token amount
@@ -236,7 +206,7 @@ func (s *SmartContract) Burn(ctx contractapi.TransactionContextInterface, amount
 		return errors.New("totalSupply does not exist")
 	}
 
-	totalSupply, _ := strconv.Atoi(string(totalSupplyBytes)) // Error handling not needed since Itoa() was used when setting the totalSupply, guaranteeing it was an integer.
+	totalSupply, _ := strconv.Atoi(string(totalSupplyBytes))
 
 	// Subtract the burn amount to the total supply and update the state
 	totalSupply -= amount
@@ -301,7 +271,7 @@ func (s *SmartContract) Transfer(ctx contractapi.TransactionContextInterface, re
 		lendingBalanceBytes, err := ctx.GetStub().GetState(userLendingBalance)
 
 		// Convert lendingBalance to integer
-		lendingBalance, _ := strconv.Atoi(string(lendingBalanceBytes)) // Error handling not needed since Itoa() was used when setting the totalSupply, guaranteeing it was an integer.
+		lendingBalance, _ := strconv.Atoi(string(lendingBalanceBytes))
 
 		newLendingBalance := lendingBalance - amount
 
@@ -320,8 +290,7 @@ func (s *SmartContract) Transfer(ctx contractapi.TransactionContextInterface, re
 			return fmt.Errorf("the account %s does not exist", recipient)
 		} */
 
-		lendingBalanceRecipient, _ := strconv.Atoi(string(lendingBalanceBytesRecipient)) // Error handling not needed since Itoa() was used when setting the account balance, guaranteeing it was an integer.
-
+		lendingBalanceRecipient, _ := strconv.Atoi(string(lendingBalanceBytesRecipient))
 		newLendingBalanceRecipient := lendingBalanceRecipient + amount
 
 		if newLendingBalanceRecipient > lendingLimit {
@@ -340,8 +309,6 @@ func (s *SmartContract) Transfer(ctx contractapi.TransactionContextInterface, re
 			return err
 		}
 	}
-
-	//-----------------------------------------------------------
 
 	err = transferHelper(ctx, clientID, recipient, amount)
 	if err != nil {
@@ -372,7 +339,7 @@ func (s *SmartContract) BalanceOf(ctx contractapi.TransactionContextInterface, a
 		return 0, fmt.Errorf("the account %s does not exist", account)
 	}
 
-	balance, _ := strconv.Atoi(string(balanceBytes)) // Error handling not needed since Itoa() was used when setting the account balance, guaranteeing it was an integer.
+	balance, _ := strconv.Atoi(string(balanceBytes))
 
 	return balance, nil
 }
@@ -394,7 +361,7 @@ func (s *SmartContract) ClientAccountBalance(ctx contractapi.TransactionContextI
 		return 0, fmt.Errorf("the account %s does not exist", clientID)
 	}
 
-	balance, _ := strconv.Atoi(string(balanceBytes)) // Error handling not needed since Itoa() was used when setting the account balance, guaranteeing it was an integer.
+	balance, _ := strconv.Atoi(string(balanceBytes))
 
 	return balance, nil
 }
@@ -428,7 +395,7 @@ func (s *SmartContract) TotalSupply(ctx contractapi.TransactionContextInterface)
 	if totalSupplyBytes == nil {
 		totalSupply = 0
 	} else {
-		totalSupply, _ = strconv.Atoi(string(totalSupplyBytes)) // Error handling not needed since Itoa() was used when setting the totalSupply, guaranteeing it was an integer.
+		totalSupply, _ = strconv.Atoi(string(totalSupplyBytes))
 	}
 
 	log.Printf("TotalSupply: %d tokens", totalSupply)
@@ -471,9 +438,6 @@ func (s *SmartContract) GetBalanceHistory(ctx contractapi.TransactionContextInte
 		buffer.WriteString("\"")
 
 		buffer.WriteString(", \"Value\":")
-		// if it was a delete operation on given key, then we need to set the
-		//corresponding value null. Else, we will write the response.Value
-		//as-is (as the Value itself a JSON marble)
 		if response.IsDelete {
 			buffer.WriteString("null")
 		} else {
@@ -517,7 +481,7 @@ func transferHelper(ctx contractapi.TransactionContextInterface, from string, to
 		return fmt.Errorf("client account %s has no balance", from)
 	}
 
-	fromCurrentBalance, _ := strconv.Atoi(string(fromCurrentBalanceBytes)) // Error handling not needed since Itoa() was used when setting the account balance, guaranteeing it was an integer.
+	fromCurrentBalance, _ := strconv.Atoi(string(fromCurrentBalanceBytes))
 
 	if fromCurrentBalance < value {
 		return fmt.Errorf("client account %s has insufficient funds", from)
@@ -533,7 +497,7 @@ func transferHelper(ctx contractapi.TransactionContextInterface, from string, to
 	if toCurrentBalanceBytes == nil {
 		toCurrentBalance = 0
 	} else {
-		toCurrentBalance, _ = strconv.Atoi(string(toCurrentBalanceBytes)) // Error handling not needed since Itoa() was used when setting the account balance, guaranteeing it was an integer.
+		toCurrentBalance, _ = strconv.Atoi(string(toCurrentBalanceBytes))
 	}
 
 	fromUpdatedBalance := fromCurrentBalance - value
