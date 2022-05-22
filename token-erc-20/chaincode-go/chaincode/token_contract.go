@@ -15,53 +15,45 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-// Define key names for options
+// Se define la clave para acceder al suministro total
 const totalSupplyKey = "totalSupply"
 
-// Define objectType names for prefix
-const allowancePrefix = "allowance"
-
-// Define key sufix for lendingBalance
+// Se define el sufijo para la clave de acceso al balance de préstamo
 const lending = "lendingBalance"
 
-// Define limit for the lending balance of users
+// Se define el límite para el balance de préstamo de los estudiantes
 const lendingLimit = 200
 
-// Define the student and minter department names
-const student = "department2"
-const minter = "department1"
-
-// SmartContract provides functions for transferring tokens between accounts
+// SmartContract proporciona las funciones para transefir tokens entre cuentas
 type SmartContract struct {
 	contractapi.Contract
 }
 
-// event provides an organized struct for emitting events
+// El struct event proporciona una estrucura organizada para emitir eventos
 type event struct {
-	from  string
-	to    string
-	value int
+	from  string // Cuenta de origen
+	to    string // Cuenta de destino
+	value int    // Cantidad a transferir
 }
 
-// Mint creates new tokens and adds them to minter's account balance
-// This function triggers a Transfer event
+// Mint crea nuevos tokens y los añade a la cuenta del minter
 func (s *SmartContract) Mint(ctx contractapi.TransactionContextInterface, amount int) error {
 
-	//Check minter identity
+	// Comprobar la identidad del minter
 
-	//Get client certificate
+	// Obtener el certificado del cliente
 	ident, err := ctx.GetClientIdentity().GetX509Certificate()
 	if err != nil {
 		return fmt.Errorf("failed to get client id: %v", err)
 	}
 
-	//Check that minter is from the minters department
+	// Comprobar que el minter pertenece al departamento adecuado
 	var mintDepart interface{} = "department1"
 	if ident.Subject.Names[2].Value != mintDepart {
 		return fmt.Errorf("This user has no mint permissions")
 	}
 
-	// Get ID of submitting client identity
+	// Obtener el ID del cliente
 	minter, err := ctx.GetClientIdentity().GetID()
 	if err != nil {
 		return fmt.Errorf("failed to get client id: %v", err)
@@ -78,7 +70,7 @@ func (s *SmartContract) Mint(ctx contractapi.TransactionContextInterface, amount
 
 	var currentBalance int
 
-	// If minter current balance doesn't yet exist, we'll create it with a current balance of 0
+	// Si el balance del minter todavía no existe se crea un nuevo balance con valor 0
 	if currentBalanceBytes == nil {
 		currentBalance = 0
 	} else {
@@ -92,7 +84,7 @@ func (s *SmartContract) Mint(ctx contractapi.TransactionContextInterface, amount
 		return err
 	}
 
-	// Update the totalSupply
+	// Actualizar el suministro total
 	totalSupplyBytes, err := ctx.GetStub().GetState(totalSupplyKey)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve total token supply: %v", err)
@@ -100,21 +92,21 @@ func (s *SmartContract) Mint(ctx contractapi.TransactionContextInterface, amount
 
 	var totalSupply int
 
-	// If no tokens have been minted, initialize the totalSupply
+	// Si no se han minado tokens todavía, inicializar totalSupply
 	if totalSupplyBytes == nil {
 		totalSupply = 0
 	} else {
 		totalSupply, _ = strconv.Atoi(string(totalSupplyBytes))
 	}
 
-	// Add the mint amount to the total supply and update the state
+	// Añadir la cantidad de tokens creada al suministro total y actualizar el estado
 	totalSupply += amount
 	err = ctx.GetStub().PutState(totalSupplyKey, []byte(strconv.Itoa(totalSupply)))
 	if err != nil {
 		return err
 	}
 
-	// Emit the Transfer event
+	// Emitir un evento Transfer
 	transferEvent := event{"0x0", minter, amount}
 	transferEventJSON, err := json.Marshal(transferEvent)
 	if err != nil {
@@ -130,11 +122,10 @@ func (s *SmartContract) Mint(ctx contractapi.TransactionContextInterface, amount
 	return nil
 }
 
-// Burn redeems tokens the minter's account balance
-// This function triggers a Transfer event
+// Burn elimina tokens de la cuenta del usuario
 func (s *SmartContract) Burn(ctx contractapi.TransactionContextInterface, amount int) error {
 
-	// Check minter authorization - this sample assumes Org1 is the central banker with privilege to burn new tokens
+	// Comprobar la identidad el burner
 	clientMSPID, err := ctx.GetClientIdentity().GetMSPID()
 	if err != nil {
 		return fmt.Errorf("failed to get MSPID: %v", err)
@@ -143,9 +134,7 @@ func (s *SmartContract) Burn(ctx contractapi.TransactionContextInterface, amount
 		return fmt.Errorf("client is not authorized to mint new tokens")
 	}
 
-	//Check burner identity
-
-	//Get client certificate
+	// Obtener el certificado del cliente
 	ident, err := ctx.GetClientIdentity().GetX509Certificate()
 	if err != nil {
 		return fmt.Errorf("failed to get client id: %v", err)
@@ -154,13 +143,13 @@ func (s *SmartContract) Burn(ctx contractapi.TransactionContextInterface, amount
 		log.Fatal(err)
 	}
 
-	//Check that burner is from the minters department
+	// Comprobar que el burner pertenece al departamento correcto
 	var mintDepart interface{} = "department1"
 	if ident.Subject.Names[2].Value != mintDepart {
 		return fmt.Errorf("This user has no burn permissions")
 	}
 
-	// Get ID of submitting client identity
+	// Obtener el ID del cliente
 	minter, err := ctx.GetClientIdentity().GetID()
 	if err != nil {
 		return fmt.Errorf("failed to get client id: %v", err)
@@ -177,7 +166,7 @@ func (s *SmartContract) Burn(ctx contractapi.TransactionContextInterface, amount
 
 	var currentBalance int
 
-	// Check if minter current balance exists
+	// Comprobar si la cuenta del cliente existe
 	if currentBalanceBytes == nil {
 		return errors.New("The balance does not exist")
 	}
@@ -185,7 +174,7 @@ func (s *SmartContract) Burn(ctx contractapi.TransactionContextInterface, amount
 	currentBalance, _ = strconv.Atoi(string(currentBalanceBytes))
 	updatedBalance := currentBalance - amount
 
-	// Check that the burn amount is smaller than the account's token amount
+	// Comprobar que la cantidad de tokens que se van a eliminar es menor que la cantidad de tokens existentes en la cuenta
 	if updatedBalance < 0 {
 		return errors.New("burn amount must be smaller than the account balance")
 	}
@@ -195,27 +184,27 @@ func (s *SmartContract) Burn(ctx contractapi.TransactionContextInterface, amount
 		return err
 	}
 
-	// Update the totalSupply
+	// Actualizar el suministro total
 	totalSupplyBytes, err := ctx.GetStub().GetState(totalSupplyKey)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve total token supply: %v", err)
 	}
 
-	// If no tokens have been minted, throw error
+	// Si no se han creado tokens todavía se lanza un error
 	if totalSupplyBytes == nil {
 		return errors.New("totalSupply does not exist")
 	}
 
 	totalSupply, _ := strconv.Atoi(string(totalSupplyBytes))
 
-	// Subtract the burn amount to the total supply and update the state
+	// Eliminar la cantidad de tokens eliminados del suministro total y actualizar el estado
 	totalSupply -= amount
 	err = ctx.GetStub().PutState(totalSupplyKey, []byte(strconv.Itoa(totalSupply)))
 	if err != nil {
 		return err
 	}
 
-	// Emit the Transfer event
+	// Emitir un evento Transfer
 	transferEvent := event{minter, "0x0", amount}
 	transferEventJSON, err := json.Marshal(transferEvent)
 	if err != nil {
@@ -231,22 +220,20 @@ func (s *SmartContract) Burn(ctx contractapi.TransactionContextInterface, amount
 	return nil
 }
 
-// Transfer transfers tokens from client account to recipient account
-// recipient account must be a valid clientID as returned by the ClientID() function
-// This function triggers a Transfer event
+// Transfer transfiere tokens de la cuenta del cliente a la cuenta del destinatario
 func (s *SmartContract) Transfer(ctx contractapi.TransactionContextInterface, recipient string, amount int) error {
 
-	// Get ID of submitting client identity
+	// Obtener el ID del cliente
 	clientID, err := ctx.GetClientIdentity().GetID()
 	if err != nil {
 		return fmt.Errorf("failed to get client id: %v", err)
 	}
 
 	//-----------------------------------------------------------
-	// If the destinatary user is another student check lending balance
+	// Si el destinatario es un estudiante se comprueba el balance de préstamo
 	//-----------------------------------------------------------
 
-	// Get the client type
+	// Obtener el tipo de usuario cliente
 	cert, err := ctx.GetClientIdentity().GetX509Certificate()
 	if err != nil {
 		return fmt.Errorf("failed to get client id: %v", err)
@@ -254,23 +241,23 @@ func (s *SmartContract) Transfer(ctx contractapi.TransactionContextInterface, re
 
 	userType := fmt.Sprintf("%v", cert.Subject.Names[2].Value)
 
-	// Get the recipient type
+	// Obtener el tipo de usuario del destinatario
 	decoded, _ := b64.StdEncoding.DecodeString(recipient)
 	decodedString := string(decoded)
 	slicedString := strings.Split(decodedString, "::")
 	strs := strings.Split(slicedString[1], "=")
 	recipientType := strs[len(strs)-1]
 
-	// Check if they are both students
+	// Comprobar si los dos son estudiantes
 	if userType == "department2" && recipientType == "department2" {
-		// Prepare lending Balance key of current user
+		// Preparar la clave del balance de préstamo del usuario actual
 		var userLendingBalance string
 		userLendingBalance = clientID + lending
 
-		// Get lendingBalance of current user from World State
+		// Obtener el balance de préstamo del usuario actual del world state
 		lendingBalanceBytes, err := ctx.GetStub().GetState(userLendingBalance)
 
-		// Convert lendingBalance to integer
+		// Convertir lendigBalance a integer
 		lendingBalance, _ := strconv.Atoi(string(lendingBalanceBytes))
 
 		newLendingBalance := lendingBalance - amount
@@ -286,9 +273,6 @@ func (s *SmartContract) Transfer(ctx contractapi.TransactionContextInterface, re
 		if err != nil {
 			return fmt.Errorf("failed to read from world state: %v", err)
 		}
-		/* 	if lendingBalanceBytesRecipient == nil {
-			return fmt.Errorf("the account %s does not exist", recipient)
-		} */
 
 		lendingBalanceRecipient, _ := strconv.Atoi(string(lendingBalanceBytesRecipient))
 		newLendingBalanceRecipient := lendingBalanceRecipient + amount
@@ -297,13 +281,13 @@ func (s *SmartContract) Transfer(ctx contractapi.TransactionContextInterface, re
 			return fmt.Errorf("Recipient would exceed maximum lending balance with this transaction, \nRecipient's current lending balance: " + strconv.Itoa(lendingBalanceRecipient) + "\nLimit lending balance: " + strconv.Itoa(lendingLimit) + "\nLending balance after transaction: " + strconv.Itoa(newLendingBalanceRecipient))
 		}
 
-		// Set the new lending balance for user
+		// Actualizar el nuevo valor de balance de préstamo para el cliente
 		err = ctx.GetStub().PutState(userLendingBalance, []byte(strconv.Itoa(newLendingBalance)))
 		if err != nil {
 			return err
 		}
 
-		// Set the new lending balance for recipient
+		// Actualizar el nuevo valor de balance de préstamo para el destinatario
 		err = ctx.GetStub().PutState(recipientLendingBalance, []byte(strconv.Itoa(newLendingBalanceRecipient)))
 		if err != nil {
 			return err
@@ -315,7 +299,7 @@ func (s *SmartContract) Transfer(ctx contractapi.TransactionContextInterface, re
 		return fmt.Errorf("failed to transfer: %v", err)
 	}
 
-	// Emit the Transfer event
+	// Emitir un evento Transfer
 	transferEvent := event{clientID, recipient, amount}
 	transferEventJSON, err := json.Marshal(transferEvent)
 	if err != nil {
@@ -329,7 +313,7 @@ func (s *SmartContract) Transfer(ctx contractapi.TransactionContextInterface, re
 	return nil
 }
 
-// BalanceOf returns the balance of the given account
+// BalanceOf devuelve el balance de la cuenta dada
 func (s *SmartContract) BalanceOf(ctx contractapi.TransactionContextInterface, account string) (int, error) {
 	balanceBytes, err := ctx.GetStub().GetState(account)
 	if err != nil {
@@ -344,10 +328,10 @@ func (s *SmartContract) BalanceOf(ctx contractapi.TransactionContextInterface, a
 	return balance, nil
 }
 
-// ClientAccountBalance returns the balance of the requesting client's account
+// ClientAccountBalance devuelve el balance de la cuenta del cliente que ejecuta la función
 func (s *SmartContract) ClientAccountBalance(ctx contractapi.TransactionContextInterface) (int, error) {
 
-	// Get ID of submitting client identity
+	// Obtener el ID del cliente que ejecuta la función
 	clientID, err := ctx.GetClientIdentity().GetID()
 	if err != nil {
 		return 0, fmt.Errorf("failed to get client id: %v", err)
@@ -366,12 +350,11 @@ func (s *SmartContract) ClientAccountBalance(ctx contractapi.TransactionContextI
 	return balance, nil
 }
 
-// ClientAccountID returns the id of the requesting client's account
-// In this implementation, the client account ID is the clientId itself
-// Users can use this function to get their own account id, which they can then give to others as the payment address
+// ClientAccountID devuelve el id del cliente que ejecuta la función
+// Los usuarios pueden usar esta función para obtener su propio id de cuenta que pueden proporcionar a otros usuarios como dirección de pago
 func (s *SmartContract) ClientAccountID(ctx contractapi.TransactionContextInterface) (string, error) {
 
-	// Get ID of submitting client identity
+	// Obtener el ID del cliente que ejecuta la función
 	clientAccountID, err := ctx.GetClientIdentity().GetID()
 	if err != nil {
 		return "", fmt.Errorf("failed to get client id: %v", err)
@@ -380,10 +363,10 @@ func (s *SmartContract) ClientAccountID(ctx contractapi.TransactionContextInterf
 	return clientAccountID, nil
 }
 
-// TotalSupply returns the total token supply
+// TotalSupply devuelve el suministro total de tokens
 func (s *SmartContract) TotalSupply(ctx contractapi.TransactionContextInterface) (int, error) {
 
-	// Retrieve total supply of tokens from state of smart contract
+	// Obtener el suministro total de tokens del estado del smart contract
 	totalSupplyBytes, err := ctx.GetStub().GetState(totalSupplyKey)
 	if err != nil {
 		return 0, fmt.Errorf("failed to retrieve total token supply: %v", err)
@@ -391,7 +374,7 @@ func (s *SmartContract) TotalSupply(ctx contractapi.TransactionContextInterface)
 
 	var totalSupply int
 
-	// If no tokens have been minted, return 0
+	// Si no se han creado tokens todavía se devuelve 0
 	if totalSupplyBytes == nil {
 		totalSupply = 0
 	} else {
@@ -403,16 +386,15 @@ func (s *SmartContract) TotalSupply(ctx contractapi.TransactionContextInterface)
 	return totalSupply, nil
 }
 
-// TotalSupply returns the total token supply
+// GetBalanceHistory devuelve el historial de balances la cuenta que ejecuta la función
 func (s *SmartContract) GetBalanceHistory(ctx contractapi.TransactionContextInterface) (string, error) {
 
-	// Get ID of submitting client identity
+	// Obtener el ID del cliente que ejecuta la función
 	client, err := ctx.GetClientIdentity().GetID()
 	if err != nil {
 		return "", fmt.Errorf("failed to get client id: %v", err)
 	}
 
-	// Retrieve total supply of tokens from state of smart contract
 	resultsIterator, err := ctx.GetStub().GetHistoryForKey(client)
 	if err != nil {
 		return "", fmt.Errorf("failed to retrieve transaction history: %v", err)
@@ -428,7 +410,6 @@ func (s *SmartContract) GetBalanceHistory(ctx contractapi.TransactionContextInte
 		if err != nil {
 			return "", fmt.Errorf("failed to retrieve transaction history: %v", err)
 		}
-		// Add a comma before array members, suppress it for the first array member
 		if bArrayMemberAlreadyWritten == true {
 			buffer.WriteString(",")
 		}
@@ -462,13 +443,12 @@ func (s *SmartContract) GetBalanceHistory(ctx contractapi.TransactionContextInte
 	return buffer.String(), nil
 }
 
-// Helper Functions
+// Funciones de apoyo
 
-// transferHelper is a helper function that transfers tokens from the "from" address to the "to" address
-// Dependant functions include Transfer and TransferFrom
+// transferHelper es una función de apoyo que transfiere toknes de la dirección "from" a la dirección "to"
 func transferHelper(ctx contractapi.TransactionContextInterface, from string, to string, value int) error {
 
-	if value < 0 { // transfer of 0 is allowed in ERC-20, so just validate against negative amounts
+	if value < 0 { // transferencias de 0 estan permitidas en ERC-20 de modo que sólo se comprueba si la cantidad es positiva
 		return fmt.Errorf("transfer amount cannot be negative")
 	}
 
@@ -493,7 +473,7 @@ func transferHelper(ctx contractapi.TransactionContextInterface, from string, to
 	}
 
 	var toCurrentBalance int
-	// If recipient current balance doesn't yet exist, we'll create it with a current balance of 0
+	// Si el balance del destinatario todavía no existe se crea con un valor de 0
 	if toCurrentBalanceBytes == nil {
 		toCurrentBalance = 0
 	} else {
