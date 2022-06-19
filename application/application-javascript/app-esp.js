@@ -311,6 +311,45 @@ async function main() {
 
 	// Se intenta ejecutar una función del canal collaborationchannel con un usuario de la org2 (este usuario no pertenece a este canal)
 	await createAsset(org2User, org2UserNumber, "asset34", "restringido", "0", "sin propietario");
+
+
+	//CASO PRÁCTICO
+	console.log("\n--------------------------------------------------------------------");
+	console.log("CASO PRÁCTICO");
+	console.log("--------------------------------------------------------------------");
+
+	console.log();
+	console.log('\x1b[36m%s\x1b[0m', '\nEl estudiante 1 hace uso de las instalaciones deportivas y hace uso del lector RFID');
+	console.log("");
+
+	await mint(uibUser, uibUserNumber, '300');
+	await getClientAccountBalance(uibUser, uibUserNumber);
+
+	await getClientAccountBalance(org1Student1, org1Student1Number);
+
+	await transfer(uibUser, uibUserNumber, '300', org1Student1, student1Account);
+	await getClientAccountBalance(uibUser, uibUserNumber);
+	await getClientAccountBalance(org1Student1, org1Student1Number);
+
+	console.log('\x1b[36m%s\x1b[0m', '\nEl estudiante 1 selecciona el menú saludable y se le otorgan tokens');
+	console.log("");
+
+	await mint(uibUser, uibUserNumber, '300');
+	await getClientAccountBalance(uibUser, uibUserNumber);
+
+	await getClientAccountBalance(org1Student1, org1Student1Number);
+
+	await transfer(uibUser, uibUserNumber, '300', org1Student1, student1Account);
+	await getClientAccountBalance(uibUser, uibUserNumber);
+	await getClientAccountBalance(org1Student1, org1Student1Number);
+
+	console.log('\x1b[36m%s\x1b[0m', '\nEl estudiante 1 usa los tokens acumulados para canjear su recompensa');
+	console.log("");
+
+	// Se ejecuta una transacción de intercambio de 30 tokens por un café
+	await exchange(org1Student1, 1, "activo1", "recompensa", "500");
+	await readAsset(uibUser, uibUserNumber, "activo1");
+
 }
 
 main();

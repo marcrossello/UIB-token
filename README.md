@@ -29,17 +29,14 @@ Now you can run the following command to start the simualtion:
 ```
 ./runapplication.sh
 ```
-## Chaincode
+## Chaincodes
+There are two chaincodes that operate in different channels. The `token_contract.go` is the chaincode where the operations with tokens are defined and the `smarcontract.go` is the chaincode where the operations with assets are defined.
 
 ## Application
-
-## Considerations
-
-### Modified IBM files
-The following files have been modified and adapted from IBM Hyperledger Fabric repository files.
-
-- `app.js` which contains the application code that creates users and executes transactions among other things.
-- `token_contract.go` which contains the chaincode for the usage of tokens.
+The application runs a sequence of operations to test the network and the operations in both chaincodes. There are two versions of the application, one in English and another one in Spanish. The Enghish applications is run by default when using the `runapplication.sh` script. To execute the Spanish version you should add `esp` as a parameter.
+```
+./runapplication.sh esp
+```
 
 ## License
 This project is available under the MIT License, located in the [LICENSE](LICENSE.md) file. Any files that come from the Hyperledger Fabric repository and have not been modified are available under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) as established on the [fabric](https://github.com/hyperledger/fabric) and [fabric-samples](https://github.com/hyperledger/fabric-samples) repositories.
